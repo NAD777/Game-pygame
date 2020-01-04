@@ -7,7 +7,7 @@ horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
 all_sprites = pg.sprite.Group()
 player_group = pg.sprite.Group()
-
+border_group = pg.sprite.Group()
 
 pg.init()
 
@@ -31,8 +31,7 @@ def load_image(name, color_key=None):
             color_key = image.get_at((0, 0))
         image.set_colorkey(color_key)
     else:
-        pass
-        # image = image.convert_alpha()
+        image = image.convert_alpha()
     return image
 
 
@@ -40,9 +39,44 @@ def trans(img, width, height, by_x, by_y):
     return pg.transform.flip(pg.transform.scale(img, (width, height)), by_x, by_y)
 
 
+def any_colide_mask(first, group):
+    for el in group:
+        if pg.sprite.collide_mask(first, el):
+            return True
+    return False
+
+
+"""
+index:
+0 - our class righter than other with wich he collide
+1 - downer
+2 - lefter
+3 - upper
+"""
+
+LEFTER = 0
+UPPER = 1
+RIGHTER = 2
+DOWNER = 3
+
+
+def where_collide(cls, dif):    
+    arr = [0, 0, 0, 0]
+    for el in dif:
+        if cls.rect.x > el.rect.x and el.rect.y <= cls.rect.y and cls.rect.y + cls.rect.height <= el.rect.y + el.rect.height:
+            arr[0] = 1
+        if cls.rect.x < el.rect.x and el.rect.y <= cls.rect.y and cls.rect.y + cls.rect.height <= el.rect.y + el.rect.height:
+            arr[2] = 1
+        if cls.rect.y > el.rect.y and el.rect.gtix <= cls.rect.x and cls.rect.x + cls.rect.width <= el.rect.x + el.rect.width:
+            arr[1] = 1
+        if cls.rect.y < el.rect.y and el.rect.x <= cls.rect.x and cls.rect.x + cls.rect.width <= el.rect.x + el.rect.width:
+            arr[3] = 1
+    return arr
+
+
 tile_images = {'wall': load_image('box.png'), 'empty': load_image('grass.png')}
 k = 3
-player_image = trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0)
+# player_image = trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0)
 
 tile_width = tile_height = 50
 
@@ -50,7 +84,7 @@ tile_width = tile_height = 50
 class Border(pg.sprite.Sprite):
     # строго вертикальный или строго горизонтальный отрезок
     def __init__(self, x1, y1, x2, y2):
-        super().__init__(all_sprites)
+        super().__init__(border_group, all_sprites)
         if x1 == x2:  # вертикальная стенка
             self.add(vertical_borders)
             self.image = pg.Surface([1, y2 - y1])
@@ -59,19 +93,24 @@ class Border(pg.sprite.Sprite):
             self.add(horizontal_borders)
             self.image = pg.Surface([x2 - x1, 1])
             self.rect = pg.Rect(x1, y1, x2 - x1, 1)
+        self.mask = pg.mask.from_surface(self.image)
+
+
+brd = Border(5, 5, WIDTH - 5, 5)
 
 
 class Player(pg.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = player_image
-        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
         
         self.idle_right = {
-            0: trans(load_image('adventurer-idle-00.png'), k * 50, k * 37, 0, 0),
-            1: trans(load_image('adventurer-idle-01.png'), k * 50, k * 37, 0, 0),
-            2: trans(load_image('adventurer-idle-02.png'), k * 50, k * 37, 0, 0)
+            0: trans(load_image('adventurer-idle-00.png', -1), k * 50, k * 37, 0, 0),
+            1: trans(load_image('adventurer-idle-01.png', -1), k * 50, k * 37, 0, 0),
+            2: trans(load_image('adventurer-idle-02.png', -1), k * 50, k * 37, 0, 0)
         }
+
+        self.image = self.idle_right[0]
+        self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
 
         self.idle_counter = 0
 
@@ -82,25 +121,59 @@ class Player(pg.sprite.Sprite):
         }
         
         self.run_right = {
-            0: trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 0, 0),
-            1: trans(load_image('adventurer-run-01.png'), k * 50, k * 37, 0, 0),
-            2: trans(load_image('adventurer-run-02.png'), k * 50, k * 37, 0, 0),
-            3: trans(load_image('adventurer-run-03.png'), k * 50, k * 37, 0, 0),
-            4: trans(load_image('adventurer-run-04.png'), k * 50, k * 37, 0, 0),
-            5: trans(load_image('adventurer-run-05.png'), k * 50, k * 37, 0, 0)
+            0: trans(load_image('adventurer-run-00.png', -1), k * 50, k * 37, 0, 0),
+            1: trans(load_image('adventurer-run-01.png', -1), k * 50, k * 37, 0, 0),
+            2: trans(load_image('adventurer-run-02.png', -1), k * 50, k * 37, 0, 0),
+            3: trans(load_image('adventurer-run-03.png', -1), k * 50, k * 37, 0, 0),
+            4: trans(load_image('adventurer-run-04.png', -1), k * 50, k * 37, 0, 0),
+            5: trans(load_image('adventurer-run-05.png', -1), k * 50, k * 37, 0, 0)
         }
 
         self.run_left = {
-            0: trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0),
-            1: trans(load_image('adventurer-run-01.png'), k * 50, k * 37, 1, 0),
-            2: trans(load_image('adventurer-run-02.png'), k * 50, k * 37, 1, 0),
-            3: trans(load_image('adventurer-run-03.png'), k * 50, k * 37, 1, 0),
-            4: trans(load_image('adventurer-run-04.png'), k * 50, k * 37, 1, 0),
-            5: trans(load_image('adventurer-run-05.png'), k * 50, k * 37, 1, 0)
+            0: trans(load_image('adventurer-run-00.png', -1), k * 50, k * 37, 1, 0),
+            1: trans(load_image('adventurer-run-01.png', -1), k * 50, k * 37, 1, 0),
+            2: trans(load_image('adventurer-run-02.png', -1), k * 50, k * 37, 1, 0),
+            3: trans(load_image('adventurer-run-03.png', -1), k * 50, k * 37, 1, 0),
+            4: trans(load_image('adventurer-run-04.png', -1), k * 50, k * 37, 1, 0),
+            5: trans(load_image('adventurer-run-05.png', -1), k * 50, k * 37, 1, 0)
         }
 
         self.run_counter = 0
+
+        self.attack_right = {
+            0: trans(load_image('adventurer-attack1-00.png', -1), k * 50, k * 37, 0, 0),
+            1: trans(load_image('adventurer-attack1-01.png', -1), k * 50, k * 37, 0, 0),
+            2: trans(load_image('adventurer-attack1-02.png', -1), k * 50, k * 37, 0, 0),
+            3: trans(load_image('adventurer-attack1-03.png', -1), k * 50, k * 37, 0, 0),
+            4: trans(load_image('adventurer-attack1-04.png', -1), k * 50, k * 37, 0, 0)
+        }
         
+        self.attack_left = {
+            0: trans(load_image('adventurer-attack1-00.png', -1), k * 50, k * 37, 1, 0),
+            1: trans(load_image('adventurer-attack1-01.png', -1), k * 50, k * 37, 1, 0),
+            2: trans(load_image('adventurer-attack1-02.png', -1), k * 50, k * 37, 1, 0),
+            3: trans(load_image('adventurer-attack1-03.png', -1), k * 50, k * 37, 1, 0),
+            4: trans(load_image('adventurer-attack1-04.png', -1), k * 50, k * 37, 1, 0)
+        }
+
+        self.attack_counter = 0
+
+        self.croach_right = {
+            0: trans(load_image('adventurer-crouch-00.png', -1), k * 50, k * 37, 0, 0),
+            1: trans(load_image('adventurer-crouch-01.png', -1), k * 50, k * 37, 0, 0),
+            2: trans(load_image('adventurer-crouch-02.png', -1), k * 50, k * 37, 0, 0),
+            3: trans(load_image('adventurer-crouch-03.png', -1), k * 50, k * 37, 0, 0)
+        }
+
+        self.croach_left = {
+            0: trans(load_image('adventurer-crouch-00.png', -1), k * 50, k * 37, 1, 0),
+            1: trans(load_image('adventurer-crouch-01.png', -1), k * 50, k * 37, 1, 0),
+            2: trans(load_image('adventurer-crouch-02.png', -1), k * 50, k * 37, 1, 0),
+            3: trans(load_image('adventurer-crouch-03.png', -1), k * 50, k * 37, 1, 0)
+        }
+
+        self.croach_counter = 0
+
         self.speed = 200 / FPS
 
         self.iteration = 0
@@ -108,23 +181,54 @@ class Player(pg.sprite.Sprite):
         self.is_staying = True
 
         self.last_right = True
+
+        self.mask = pg.mask.from_surface(self.image)
+
+        self.on_ground = True
     
     def set_speed(self, new_speed):
         self.speed = new_speed
     
     def update(self, *args):
         self.iteration = (self.iteration + 1) % 40
+        if pg.sprite.collide_mask(self, brd):
+            print(1)
+        if any_colide_mask(self, border_group):
+            print(2)
+        # ref
+        collide = pg.sprite.spritecollide(self, border_group, False)
+        if not collide:
+            self.rect = self.rect.move(0, self.speed * 2)
+            self.on_ground = False
+        else:
+            self.on_ground = True
+        #
         if args:
+            where = where_collide(self, collide)
+            print(where)
+            if args[0][pg.K_f] and self.iteration % 3 == 0:
+                if self.last_right:
+                    self.image = self.attack_right[self.attack_counter]
+                else:
+                    self.image = self.attack_left[self.attack_counter]
+                self.attack_counter = (self.attack_counter + 1) % 5
             if args[0][pg.K_UP]:
                 self.is_staying = False
+                
                 self.rect = self.rect.move(0, -self.speed)
-            if args[0][pg.K_DOWN]:
+            if args[0][pg.K_DOWN] and self.iteration % 15 == 0:
+                if args[0][pg.K_SPACE]:
+                    self.rect = self.rect.move(0, 50)
                 self.is_staying = False
-                self.rect = self.rect.move(0, self.speed)
-            if args[0][pg.K_LEFT]:
+                if self.last_right:
+                    self.image = self.croach_right[self.croach_counter]
+                else:
+                    self.image = self.croach_left[self.croach_counter]
+                self.croach_counter = (self.croach_counter + 1) % 4
+            if args[0][pg.K_LEFT] and not where[LEFTER]:
                 self.is_staying = False
                 self.last_right = False
-
+                
                 if self.iteration % 5 == 0:
                     self.image = self.run_left[self.run_counter]
                     self.run_counter = (self.run_counter + 1) % 6
@@ -133,21 +237,21 @@ class Player(pg.sprite.Sprite):
             if args[0][pg.K_RIGHT]:
                 self.is_staying = False
                 self.last_right = True
-
+                
                 if self.iteration % 5 == 0:
                     self.image = self.run_right[self.run_counter]
                     self.run_counter = (self.run_counter + 1) % 6
 
                 self.rect = self.rect.move(self.speed, 0)
-            if self.is_staying and self.iteration % 20 == 0:
+            if self.is_staying and not args[0][pg.K_DOWN] and self.iteration % 20 == 0:
                 self.run_counter = 0
-
+                self.attack_counter = 0
                 if self.last_right:
                     self.image = self.idle_right[self.idle_counter]
                 else:
                     self.image = self.idle_left[self.idle_counter]
                 self.idle_counter = (self.idle_counter + 1) % 3
-                print(self.idle_counter)
+                # print(self.idle_counter)
         self.is_staying = True
 
 
@@ -208,9 +312,9 @@ class Game:
             clock.tick(FPS)
             all_sprites.draw(screen)
             player_group.draw(screen)
-            print(player_group)
+            # print(player_group)
             pg.display.flip()
-            screen.fill((255, 255, 255))
+            screen.fill((0, 255, 0))
 
 
 if __name__ == "__main__":
