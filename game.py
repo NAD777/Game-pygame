@@ -31,12 +31,18 @@ def load_image(name, color_key=None):
             color_key = image.get_at((0, 0))
         image.set_colorkey(color_key)
     else:
-        image = image.convert_alpha()
+        pass
+        # image = image.convert_alpha()
     return image
 
 
+def trans(img, width, height, by_x, by_y):
+    return pg.transform.flip(pg.transform.scale(img, (width, height)), by_x, by_y)
+
+
 tile_images = {'wall': load_image('box.png'), 'empty': load_image('grass.png')}
-player_image = load_image('mario.png')
+k = 3
+player_image = trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0)
 
 tile_width = tile_height = 50
 
@@ -61,21 +67,88 @@ class Player(pg.sprite.Sprite):
         self.image = player_image
         self.rect = self.image.get_rect().move(tile_width * pos_x + 15, tile_height * pos_y + 5)
         
+        self.idle_right = {
+            0: trans(load_image('adventurer-idle-00.png'), k * 50, k * 37, 0, 0),
+            1: trans(load_image('adventurer-idle-01.png'), k * 50, k * 37, 0, 0),
+            2: trans(load_image('adventurer-idle-02.png'), k * 50, k * 37, 0, 0)
+        }
+
+        self.idle_counter = 0
+
+        self.idle_left = {
+            0: trans(load_image('adventurer-idle-00.png', -1), k * 50, k * 37, 1, 0),
+            1: trans(load_image('adventurer-idle-01.png', -1), k * 50, k * 37, 1, 0),
+            2: trans(load_image('adventurer-idle-02.png', -1), k * 50, k * 37, 1, 0)
+        }
+        
+        self.run_right = {
+            0: trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 0, 0),
+            1: trans(load_image('adventurer-run-01.png'), k * 50, k * 37, 0, 0),
+            2: trans(load_image('adventurer-run-02.png'), k * 50, k * 37, 0, 0),
+            3: trans(load_image('adventurer-run-03.png'), k * 50, k * 37, 0, 0),
+            4: trans(load_image('adventurer-run-04.png'), k * 50, k * 37, 0, 0),
+            5: trans(load_image('adventurer-run-05.png'), k * 50, k * 37, 0, 0)
+        }
+
+        self.run_left = {
+            0: trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0),
+            1: trans(load_image('adventurer-run-01.png'), k * 50, k * 37, 1, 0),
+            2: trans(load_image('adventurer-run-02.png'), k * 50, k * 37, 1, 0),
+            3: trans(load_image('adventurer-run-03.png'), k * 50, k * 37, 1, 0),
+            4: trans(load_image('adventurer-run-04.png'), k * 50, k * 37, 1, 0),
+            5: trans(load_image('adventurer-run-05.png'), k * 50, k * 37, 1, 0)
+        }
+
+        self.run_counter = 0
+        
         self.speed = 200 / FPS
+
+        self.iteration = 0
+
+        self.is_staying = True
+
+        self.last_right = True
     
     def set_speed(self, new_speed):
         self.speed = new_speed
     
     def update(self, *args):
+        self.iteration = (self.iteration + 1) % 40
         if args:
             if args[0][pg.K_UP]:
+                self.is_staying = False
                 self.rect = self.rect.move(0, -self.speed)
             if args[0][pg.K_DOWN]:
+                self.is_staying = False
                 self.rect = self.rect.move(0, self.speed)
             if args[0][pg.K_LEFT]:
+                self.is_staying = False
+                self.last_right = False
+
+                if self.iteration % 5 == 0:
+                    self.image = self.run_left[self.run_counter]
+                    self.run_counter = (self.run_counter + 1) % 6
+                
                 self.rect = self.rect.move(-self.speed, 0)
             if args[0][pg.K_RIGHT]:
+                self.is_staying = False
+                self.last_right = True
+
+                if self.iteration % 5 == 0:
+                    self.image = self.run_right[self.run_counter]
+                    self.run_counter = (self.run_counter + 1) % 6
+
                 self.rect = self.rect.move(self.speed, 0)
+            if self.is_staying and self.iteration % 20 == 0:
+                self.run_counter = 0
+
+                if self.last_right:
+                    self.image = self.idle_right[self.idle_counter]
+                else:
+                    self.image = self.idle_left[self.idle_counter]
+                self.idle_counter = (self.idle_counter + 1) % 3
+                print(self.idle_counter)
+        self.is_staying = True
 
 
 class Game:
@@ -114,10 +187,10 @@ class Game:
         exit()
 
     def start(self):
-        Border(5, 5, WIDTH - 5, 5)
-        Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
-        Border(5, 5, 5, HEIGHT - 5)
-        Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
+        Border(0, 0, WIDTH, 0)
+        Border(0, HEIGHT, WIDTH, HEIGHT)
+        Border(0, 0, 0, HEIGHT)
+        Border(WIDTH, 0, WIDTH, HEIGHT)
         
         self.game()
         # self.start_screen()
