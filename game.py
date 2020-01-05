@@ -1,6 +1,7 @@
 import pygame as pg
 import json
 import os
+from math import ceil
 
 
 horizontal_borders = pg.sprite.Group()
@@ -61,21 +62,6 @@ UPPER = 1
 RIGHTER = 2
 DOWNER = 3
 
-
-def where_collide(cls, dif):    
-    arr = [0, 0, 0, 0]
-    for el in dif:
-        if el.rect.x + el.rect.width >= cls.rect.x >= el.rect.x and (el.rect.y <= cls.rect.y <= el.rect.y + el.rect.height):
-            arr[0] = 1
-        if el.rect.x + el.rect.width >= cls.rect.x + cls.rect.width >= el.rect.x and (el.rect.y <= cls.rect.y <= el.rect.y + el.rect.height):
-            arr[2] = 1
-        if el.rect.y + el.rect.height >= cls.rect.y + cls.rect.height >= el.rect.y and (el.rect.x <= cls.rect.x <= el.rect.x + el.rect.width):
-            arr[3] = 1
-        if el.rect.y + el.rect.height >= cls.rect.y >= el.rect.y and (el.rect.x <= cls.rect.x <= el.rect.x + el.rect.width):
-            arr[1] = 1
-    return arr
-
-
 k = int(WIDTH / 960)
 # player_image = trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0)
 
@@ -97,15 +83,26 @@ class Border(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
 
 
-tile_images = {'wall': load_image('box.png'), 'empty': load_image('grass.png')}
-platform_images = {'left': "platform1.png", 'mid': "platform2.png", "right": "platform3.png"}
+width_platform = ceil(WIDTH // 16)
+height_platform = ceil(HEIGHT // 9)
+
+tile_images = {
+    'box': trans(load_image('box.png'), width_platform, height_platform, 0, 0), 
+    'grass': trans(load_image('box.png'), width_platform, height_platform, 0, 0)
+}
+platform_images = {
+    'l': trans(load_image('platform1.png'), width_platform, height_platform, 0, 0), 
+    'm': trans(load_image('platform2.png'), width_platform, height_platform, 0, 0), 
+    "r": trans(load_image('platform3.png'), width_platform, height_platform, 0, 0)
+}
 
 
 class Platform(pg.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(platforms_group, all_sprites)
-        self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.image = platform_images[tile_type]
+        self.rect = self.image.get_rect().move(width_platform * pos_x, height_platform * pos_y)
+        self.mask = pg.mask.from_surface(self.image)
 
 
 class Skelet(pg.sprite.Sprite):
@@ -120,6 +117,7 @@ class Skelet(pg.sprite.Sprite):
         self.image = self.frames[self.cur_frame]
         self.rect = self.image.get_rect().move(tile_width * x + 15, tile_height * y + 5)
         self.mask = pg.mask.from_surface(self.image)
+        self.iteration = 0
     
     def cut_sheet(self, sheet, columns, rows):
         self.rect = pg.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
@@ -130,8 +128,10 @@ class Skelet(pg.sprite.Sprite):
                     frame_location, self.rect.size)))
 
     def update(self):
-        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-        self.image = self.frames[self.cur_frame]
+        if self.iteration % 10 == 0:
+            self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+            self.image = self.frames[self.cur_frame]
+        self.iteration = (self.iteration + 1) % 40
 
 
 class Player(pg.sprite.Sprite):
@@ -228,10 +228,9 @@ class Player(pg.sprite.Sprite):
     
     def update(self, *args):
         self.iteration = (self.iteration + 1) % 40
-        print(where_collide(self, pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)))
-
         # ref
-        collide = pg.sprite.spritecollide(self, border_group, False)
+        collide = pg.sprite.spritecollide(self, platforms_group, False, pg.sprite.collide_mask)
+        print(collide)
         # print(collide)
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
@@ -303,6 +302,30 @@ class Game:
         self.running = True
         self.start()
     
+    def load_level(self, filename):
+        filename = "data/" + filename
+        # читаем уровень, убирая символы перевода строки
+        with open(filename, 'r') as mapFile:
+            level_map = [line.strip() for line in mapFile]
+
+        # и подсчитываем максимальную длину    
+        self.max_width = max(map(len, level_map))
+
+        # дополняем каждую строку пустыми клетками ('.')    
+        return list(map(lambda x: x.ljust(self.max_width, '.'), level_map))
+    
+    def generate_level(self, level):
+        # new_player, x, y = None, None, None
+        for y in range(len(level)):
+            for x in range(len(level[y])):
+                if level[y][x] in ['l', 'm', 'r']:
+                    Platform(level[y][x], x, y)
+                # elif level[y][x] == '@':
+                #     Tile('empty', x, y)
+                #     new_player = Player(x, y)
+    # вернем игрока, а также размер поля в клетках            
+        # return new_player, x, y
+
     def start_screen(self):
         intro_text = ["ЗАСТАВКА", "",
                     "Нажмите кнопку мыши для начала!"]
@@ -334,19 +357,14 @@ class Game:
         exit()
 
     def start(self):
-        Border(5, 5, WIDTH - 5, 5)
-        Border(5, HEIGHT - 5, WIDTH - 5, HEIGHT - 5)
-        Border(5, 5, 5, HEIGHT)
-        Border(WIDTH - 5, 5, WIDTH - 5, HEIGHT - 5)
-        
-        self.game()
         # self.start_screen()
+        self.game()
 
     def game(self):
-
+        
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
-    
+        self.generate_level(self.load_level("map.txt"))
         enemy = Skelet(2, 2)
         self.player = Player(4, 4)
         while self.running:
