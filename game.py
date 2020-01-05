@@ -209,7 +209,7 @@ class Player(pg.sprite.Sprite):
 
         self.croach_counter = 0
 
-        self.speed = 200 * k / FPS
+        self.speed = 300 * k / FPS
 
         self.iteration = 0
 
@@ -220,6 +220,8 @@ class Player(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
 
         self.on_ground = True
+
+        self.jump_speed = self.speed * 6
     
     def set_speed(self, new_speed):
         self.speed = new_speed
@@ -234,9 +236,10 @@ class Player(pg.sprite.Sprite):
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
         if not collide:
-            # self.rect = self.rect.move(0, self.speed * 2)
+            self.rect = self.rect.move(0, self.speed * 2)
             self.on_ground = False
         else:
+            self.jump_speed = 6 * self.speed
             self.on_ground = True
         #
         if args:
@@ -247,10 +250,13 @@ class Player(pg.sprite.Sprite):
                 else:
                     self.image = self.attack_left[self.attack_counter]
                 self.attack_counter = (self.attack_counter + 1) % 5
-            if args[0][pg.K_UP]:
+            if args[0][pg.K_SPACE] and not(args[0][pg.K_DOWN]):
                 self.is_staying = False
                 
-                self.rect = self.rect.move(0, -self.speed)
+                self.rect = self.rect.move(0, -self.jump_speed)
+                self.jump_speed -= self.speed // 3
+                self.jump_speed = max(self.jump_speed, 0)
+
             if args[0][pg.K_DOWN] and self.iteration % 5 == 0:
                 if args[0][pg.K_SPACE]:
                     self.rect = self.rect.move(0, 50)
