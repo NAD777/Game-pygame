@@ -9,6 +9,7 @@ all_sprites = pg.sprite.Group()
 player_group = pg.sprite.Group()
 border_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
+platforms_group = pg.sprite.Group()
 
 pg.init()
 
@@ -75,11 +76,10 @@ def where_collide(cls, dif):
     return arr
 
 
-tile_images = {'wall': load_image('box.png'), 'empty': load_image('grass.png')}
 k = int(WIDTH / 960)
 # player_image = trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0)
 
-tile_width = tile_height = 100
+tile_width = tile_height = int(60 * k)
 
 
 class Border(pg.sprite.Sprite):
@@ -97,12 +97,41 @@ class Border(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
 
 
-class Enemy(pg.sprite.Sprite):
+tile_images = {'wall': load_image('box.png'), 'empty': load_image('grass.png')}
+platform_images = {'left': "platform1.png", 'mid': "platform2.png", "right": "platform3.png"}
+
+
+class Platform(pg.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(platforms_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+
+
+class Skelet(pg.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(all_sprites, enemy_group)
-        self.image = load_image('adventurer-idle-00.png', -1)
+        self.frames = []
+        img = load_image("Skeleton Walk.png", -1)
+        h = k * 111
+        img = trans(img, img.get_width() * k * 3, h, 0, 0)
+        self.cut_sheet(img, 13, 1)
+        self.cur_frame = 0
+        self.image = self.frames[self.cur_frame]
         self.rect = self.image.get_rect().move(tile_width * x + 15, tile_height * y + 5)
         self.mask = pg.mask.from_surface(self.image)
+    
+    def cut_sheet(self, sheet, columns, rows):
+        self.rect = pg.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
+        for j in range(rows):
+            for i in range(columns):
+                frame_location = (self.rect.w * i, self.rect.h * j)
+                self.frames.append(sheet.subsurface(pg.Rect(
+                    frame_location, self.rect.size)))
+
+    def update(self):
+        self.cur_frame = (self.cur_frame + 1) % len(self.frames)
+        self.image = self.frames[self.cur_frame]
 
 
 class Player(pg.sprite.Sprite):
@@ -312,7 +341,7 @@ class Game:
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
     
-        enemy = Enemy(2, 2)
+        enemy = Skelet(2, 2)
         self.player = Player(4, 4)
         while self.running:
             
@@ -322,6 +351,7 @@ class Game:
                 # if event.type == pg.KEYDOWN:
             pressed = pg.key.get_pressed()
             player_group.update(pressed)
+            enemy_group.update()
             clock.tick(FPS)
             all_sprites.draw(screen)
             player_group.draw(screen)
