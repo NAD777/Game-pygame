@@ -291,8 +291,6 @@ class Player(pg.sprite.Sprite):
         self.iteration = (self.iteration + 1) % 40
         # ref
         collide = pg.sprite.spritecollide(self, platforms_group, False, pg.sprite.collide_mask)
-        # print(collide)
-        # print(collide)
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
         if not collide:
