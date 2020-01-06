@@ -26,12 +26,17 @@ screen.fill((0, 0, 0))
 clock = pg.time.Clock()
 
 
-def load_image(name, color_key=None):
+def load_image(name, color_key=None, x=0, y=0):
     fullname = os.path.join('data', name)
     image = pg.image.load(fullname).convert()
     if color_key is not None: 
         if color_key == -1:
-            color_key = image.get_at((0, 0))
+            if x == 1 and y == 1:
+                color_key = image.get_at((image.get_width() - 1, image.get_height() - 1))
+            elif x == 1:
+                color_key = image.get_at((0, image.get_height() - 1))
+            else:
+                color_key = image.get_at((0, 0))
         image.set_colorkey(color_key)
     else:
         image = image.convert_alpha()
@@ -91,9 +96,9 @@ tile_images = {
     'grass': trans(load_image('box.png'), width_platform, height_platform, 0, 0)
 }
 platform_images = {
-    'l': trans(load_image('platform1.png'), width_platform, height_platform, 0, 0), 
+    'l': trans(load_image('platform1.png', -1, 1), width_platform, height_platform, 0, 0), 
     'm': trans(load_image('platform2.png'), width_platform, height_platform, 0, 0), 
-    "r": trans(load_image('platform3.png'), width_platform, height_platform, 0, 0)
+    "r": trans(load_image('platform3.png', -1, 1, 1), width_platform, height_platform, 0, 0)
 }
 
 
@@ -320,9 +325,13 @@ class Game:
             for x in range(len(level[y])):
                 if level[y][x] in ['l', 'm', 'r']:
                     Platform(level[y][x], x, y)
-                # elif level[y][x] == '@':
-                #     Tile('empty', x, y)
-                #     new_player = Player(x, y)
+                elif level[y][x] == '@':
+                    # Player(x, y)
+                    self.new_player = Player(x, y)
+                    self.player_x = x
+                    self.player_y = y
+                elif level[y][x] == 'E':
+                    Skelet(x, y)
     # вернем игрока, а также размер поля в клетках            
         # return new_player, x, y
 
@@ -365,10 +374,7 @@ class Game:
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
         self.generate_level(self.load_level("map.txt"))
-        enemy = Skelet(2, 2)
-        self.player = Player(4, 4)
         while self.running:
-            
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.running = False
