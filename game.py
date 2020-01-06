@@ -2,6 +2,7 @@ import pygame as pg
 import json
 import os
 from math import ceil
+from copy import copy
 
 
 horizontal_borders = pg.sprite.Group()
@@ -11,6 +12,7 @@ player_group = pg.sprite.Group()
 border_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 platforms_group = pg.sprite.Group()
+hearts_group = pg.sprite.Group()
 
 pg.init()
 
@@ -28,6 +30,7 @@ clock = pg.time.Clock()
 
 def load_image(name, color_key=None, x=0, y=0):
     fullname = os.path.join('data', name)
+    print(fullname)
     image = pg.image.load(fullname).convert()
     if color_key is not None: 
         if color_key == -1:
@@ -139,10 +142,63 @@ class Skelet(pg.sprite.Sprite):
         self.iteration = (self.iteration + 1) % 40
 
 
+class Heart(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites, hearts_group)
+        self.hearts = [trans(load_image(f'fulllife/h{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 14)]
+        self.image = self.hearts[0]
+        self.rect = self.image.get_rect().move(15, 5)
+        
+        self.col = 4
+        
+        self.iteration = 0
+
+        self.counter = 0 
+
+        self.mod = 13
+        
+        self.damage_just_taken = False
+
+        self.col_blinks = 0
+
+    def take_damage(self):
+        self.col -= 1
+        print(1)
+        self.damage_just_taken = True
+        if self.col == 3:
+            self.hearts = [trans(load_image(f'almosthalflife/h{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 14)]
+        if self.col == 2:
+            self.hearts = [trans(load_image(f'halflife/h{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 14)]
+        if self.col == 1:
+            self.hearts = [trans(load_image(f'onelife/h{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 14)]
+        if self.col == 0:
+            self.hearts = [trans(load_image(f'death/death{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 3)]
+            self.mod = 2
+            print("DEATH!")
+
+    def update(self):
+        self.iteration = (self.iteration + 1) % 40
+        # print(self.col_blinks)
+        if self.damage_just_taken and self.iteration % 5 == 0:
+            if self.col_blinks != 8:
+                self.counter = self.counter % self.mod
+                img = copy(self.hearts[self.counter])
+                if self.col_blinks % 2 == 0:
+                    img.set_alpha(0)
+                self.image = img
+                self.col_blinks += 1
+            else:
+                self.damage_just_taken = False
+                self.col_blinks = 0
+        elif self.iteration % 10 == 0:
+            self.counter = (self.counter + 1) % self.mod
+            self.image = self.hearts[self.counter]
+
+
 class Player(pg.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        
+        self.hearts = Heart()
         self.idle_right = {
             0: trans(load_image('adventurer-idle-00.png', -1), k * 150, k * 111, 0, 0),
             1: trans(load_image('adventurer-idle-01.png', -1), k * 150, k * 111, 0, 0),
@@ -235,7 +291,7 @@ class Player(pg.sprite.Sprite):
         self.iteration = (self.iteration + 1) % 40
         # ref
         collide = pg.sprite.spritecollide(self, platforms_group, False, pg.sprite.collide_mask)
-        print(collide)
+        # print(collide)
         # print(collide)
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
@@ -247,6 +303,9 @@ class Player(pg.sprite.Sprite):
             self.on_ground = True
         #
         if args:
+            if args[0][pg.K_g] and self.iteration % 5 == 0:
+                self.hearts.take_damage()
+
             self.mask = pg.mask.from_surface(self.image)
             if args[0][pg.K_f] and self.iteration % 3 == 0:
                 if self.last_right:
@@ -381,6 +440,7 @@ class Game:
                 # if event.type == pg.KEYDOWN:
             pressed = pg.key.get_pressed()
             player_group.update(pressed)
+            hearts_group.update()
             enemy_group.update()
             clock.tick(FPS)
             all_sprites.draw(screen)
