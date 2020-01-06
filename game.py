@@ -30,7 +30,6 @@ clock = pg.time.Clock()
 
 def load_image(name, color_key=None, x=0, y=0):
     fullname = os.path.join('data', name)
-    print(fullname)
     image = pg.image.load(fullname).convert()
     if color_key is not None: 
         if color_key == -1:
@@ -71,7 +70,7 @@ RIGHTER = 2
 DOWNER = 3
 
 k = int(WIDTH / 960)
-# player_image = trans(load_image('adventurer-run-00.png'), k * 50, k * 37, 1, 0)
+# player_image = trans(load_image('adventurer-run-00.png'), 50, 37, 1, 0)
 
 tile_width = tile_height = int(60 * k)
 
@@ -118,8 +117,8 @@ class Skelet(pg.sprite.Sprite):
         super().__init__(all_sprites, enemy_group)
         self.frames = []
         img = load_image("Skeleton Walk.png", -1)
-        h = k * 111
-        img = trans(img, img.get_width() * k * 3, h, 0, 0)
+        h = 111
+        img = trans(img, img.get_width() * 3, h, 0, 0)
         self.cut_sheet(img, 13, 1)
         self.cur_frame = 0
         self.image = self.frames[self.cur_frame]
@@ -144,7 +143,7 @@ class Skelet(pg.sprite.Sprite):
 
 class Heart(pg.sprite.Sprite):
     def __init__(self):
-        super().__init__(all_sprites, hearts_group)
+        super().__init__(hearts_group)
         self.hearts = [trans(load_image(f'fulllife/h{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 14)]
         self.image = self.hearts[0]
         self.rect = self.image.get_rect().move(15, 5)
@@ -200,9 +199,9 @@ class Player(pg.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.hearts = Heart()
         self.idle_right = {
-            0: trans(load_image('adventurer-idle-00.png', -1), k * 150, k * 111, 0, 0),
-            1: trans(load_image('adventurer-idle-01.png', -1), k * 150, k * 111, 0, 0),
-            2: trans(load_image('adventurer-idle-02.png', -1), k * 150, k * 111, 0, 0)
+            0: trans(load_image('adventurer-idle-00.png', -1), 150, 111, 0, 0),
+            1: trans(load_image('adventurer-idle-01.png', -1), 150, 111, 0, 0),
+            2: trans(load_image('adventurer-idle-02.png', -1), 150, 111, 0, 0)
         }
 
         self.image = self.idle_right[0]
@@ -211,61 +210,61 @@ class Player(pg.sprite.Sprite):
         self.idle_counter = 0
 
         self.idle_left = {
-            0: trans(load_image('adventurer-idle-00.png', -1), k * 150, k * 111, 1, 0),
-            1: trans(load_image('adventurer-idle-01.png', -1), k * 150, k * 111, 1, 0),
-            2: trans(load_image('adventurer-idle-02.png', -1), k * 150, k * 111, 1, 0)
+            0: trans(load_image('adventurer-idle-00.png', -1), 150, 111, 1, 0),
+            1: trans(load_image('adventurer-idle-01.png', -1), 150, 111, 1, 0),
+            2: trans(load_image('adventurer-idle-02.png', -1), 150, 111, 1, 0)
         }
         
         self.run_right = {
-            0: trans(load_image('adventurer-run-00.png', -1), k * 150, k * 111, 0, 0),
-            1: trans(load_image('adventurer-run-01.png', -1), k * 150, k * 111, 0, 0),
-            2: trans(load_image('adventurer-run-02.png', -1), k * 150, k * 111, 0, 0),
-            3: trans(load_image('adventurer-run-03.png', -1), k * 150, k * 111, 0, 0),
-            4: trans(load_image('adventurer-run-04.png', -1), k * 150, k * 111, 0, 0),
-            5: trans(load_image('adventurer-run-05.png', -1), k * 150, k * 111, 0, 0)
+            0: trans(load_image('adventurer-run-00.png', -1), 150, 111, 0, 0),
+            1: trans(load_image('adventurer-run-01.png', -1), 150, 111, 0, 0),
+            2: trans(load_image('adventurer-run-02.png', -1), 150, 111, 0, 0),
+            3: trans(load_image('adventurer-run-03.png', -1), 150, 111, 0, 0),
+            4: trans(load_image('adventurer-run-04.png', -1), 150, 111, 0, 0),
+            5: trans(load_image('adventurer-run-05.png', -1), 150, 111, 0, 0)
         }
 
         self.run_left = {
-            0: trans(load_image('adventurer-run-00.png', -1), k * 150, k * 111, 1, 0),
-            1: trans(load_image('adventurer-run-01.png', -1), k * 150, k * 111, 1, 0),
-            2: trans(load_image('adventurer-run-02.png', -1), k * 150, k * 111, 1, 0),
-            3: trans(load_image('adventurer-run-03.png', -1), k * 150, k * 111, 1, 0),
-            4: trans(load_image('adventurer-run-04.png', -1), k * 150, k * 111, 1, 0),
-            5: trans(load_image('adventurer-run-05.png', -1), k * 150, k * 111, 1, 0)
+            0: trans(load_image('adventurer-run-00.png', -1), 150, 111, 1, 0),
+            1: trans(load_image('adventurer-run-01.png', -1), 150, 111, 1, 0),
+            2: trans(load_image('adventurer-run-02.png', -1), 150, 111, 1, 0),
+            3: trans(load_image('adventurer-run-03.png', -1), 150, 111, 1, 0),
+            4: trans(load_image('adventurer-run-04.png', -1), 150, 111, 1, 0),
+            5: trans(load_image('adventurer-run-05.png', -1), 150, 111, 1, 0)
         }
 
         self.run_counter = 0
 
         self.attack_right = {
-            0: trans(load_image('adventurer-attack1-00.png', -1), k * 150, k * 111, 0, 0),
-            1: trans(load_image('adventurer-attack1-01.png', -1), k * 150, k * 111, 0, 0),
-            2: trans(load_image('adventurer-attack1-02.png', -1), k * 150, k * 111, 0, 0),
-            3: trans(load_image('adventurer-attack1-03.png', -1), k * 150, k * 111, 0, 0),
-            4: trans(load_image('adventurer-attack1-04.png', -1), k * 150, k * 111, 0, 0)
+            0: trans(load_image('adventurer-attack1-00.png', -1), 150, 111, 0, 0),
+            1: trans(load_image('adventurer-attack1-01.png', -1),  150,  111, 0, 0),
+            2: trans(load_image('adventurer-attack1-02.png', -1),  150, 111, 0, 0),
+            3: trans(load_image('adventurer-attack1-03.png', -1), 150, 111, 0, 0),
+            4: trans(load_image('adventurer-attack1-04.png', -1), 150, 111, 0, 0)
         }
         
         self.attack_left = {
-            0: trans(load_image('adventurer-attack1-00.png', -1), k * 150, k * 111, 1, 0),
-            1: trans(load_image('adventurer-attack1-01.png', -1), k * 150, k * 111, 1, 0),
-            2: trans(load_image('adventurer-attack1-02.png', -1), k * 150, k * 111, 1, 0),
-            3: trans(load_image('adventurer-attack1-03.png', -1), k * 150, k * 111, 1, 0),
-            4: trans(load_image('adventurer-attack1-04.png', -1), k * 150, k * 111, 1, 0)
+            0: trans(load_image('adventurer-attack1-00.png', -1), 150, 111, 1, 0),
+            1: trans(load_image('adventurer-attack1-01.png', -1), 150, 111, 1, 0),
+            2: trans(load_image('adventurer-attack1-02.png', -1), 150, 111, 1, 0),
+            3: trans(load_image('adventurer-attack1-03.png', -1), 150, 111, 1, 0),
+            4: trans(load_image('adventurer-attack1-04.png', -1), 150, 111, 1, 0)
         }
 
         self.attack_counter = 0
 
         self.croach_right = {
-            0: trans(load_image('adventurer-crouch-00.png', -1), k * 150, k * 111, 0, 0),
-            1: trans(load_image('adventurer-crouch-01.png', -1), k * 150, k * 111, 0, 0),
-            2: trans(load_image('adventurer-crouch-02.png', -1), k * 150, k * 111, 0, 0),
-            3: trans(load_image('adventurer-crouch-03.png', -1), k * 150, k * 111, 0, 0)
+            0: trans(load_image('adventurer-crouch-00.png', -1), 150, 111, 0, 0),
+            1: trans(load_image('adventurer-crouch-01.png', -1), 150, 111, 0, 0),
+            2: trans(load_image('adventurer-crouch-02.png', -1), 150, 111, 0, 0),
+            3: trans(load_image('adventurer-crouch-03.png', -1), 150, 111, 0, 0)
         }
 
         self.croach_left = {
-            0: trans(load_image('adventurer-crouch-00.png', -1), k * 150, k * 111, 1, 0),
-            1: trans(load_image('adventurer-crouch-01.png', -1), k * 150, k * 111, 1, 0),
-            2: trans(load_image('adventurer-crouch-02.png', -1), k * 150, k * 111, 1, 0),
-            3: trans(load_image('adventurer-crouch-03.png', -1), k * 150, k * 111, 1, 0)
+            0: trans(load_image('adventurer-crouch-00.png', -1), 150, 111, 1, 0),
+            1: trans(load_image('adventurer-crouch-01.png', -1), 150, 111, 1, 0),
+            2: trans(load_image('adventurer-crouch-02.png', -1), 150, 111, 1, 0),
+            3: trans(load_image('adventurer-crouch-03.png', -1), 150, 111, 1, 0)
         }
 
         self.croach_counter = 0
@@ -359,6 +358,23 @@ class Player(pg.sprite.Sprite):
         self.mask = pg.mask.from_surface(self.image)
 
 
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+        
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+    
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
+        # self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
+
+
 class Game:
     def __init__(self):
         self.running = True
@@ -384,7 +400,7 @@ class Game:
                     Platform(level[y][x], x, y)
                 elif level[y][x] == '@':
                     # Player(x, y)
-                    self.new_player = Player(x, y)
+                    self.player = Player(x, y)
                     self.player_x = x
                     self.player_y = y
                 elif level[y][x] == 'E':
@@ -427,7 +443,7 @@ class Game:
         self.game()
 
     def game(self):
-        
+        self.camera = Camera()
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
         self.generate_level(self.load_level("map.txt"))
@@ -438,10 +454,16 @@ class Game:
                 # if event.type == pg.KEYDOWN:
             pressed = pg.key.get_pressed()
             player_group.update(pressed)
+            
+            self.camera.update(self.player)
+            for sprite in all_sprites:
+                self.camera.apply(sprite)
+
             hearts_group.update()
             enemy_group.update()
             clock.tick(FPS)
             all_sprites.draw(screen)
+            hearts_group.draw(screen)
             player_group.draw(screen)
             # print(player_group)
             pg.display.flip()
