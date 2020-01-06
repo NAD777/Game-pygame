@@ -318,8 +318,8 @@ class Player(pg.sprite.Sprite):
                 self.jump_speed = max(self.jump_speed, 0)
 
             if args[0][pg.K_DOWN] and self.iteration % 5 == 0:
-                if args[0][pg.K_SPACE]:
-                    self.rect = self.rect.move(0, 50)
+                # if args[0][pg.K_SPACE]:
+                #     self.rect = self.rect.move(0, 50)
                 self.is_staying = False
                 if self.iteration % 15 == 0:
                     if self.last_right:
