@@ -5,6 +5,8 @@ from math import ceil
 from copy import copy
 
 
+DEGUG = 0
+
 horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
 all_sprites = pg.sprite.Group()
@@ -13,6 +15,12 @@ border_group = pg.sprite.Group()
 enemy_group = pg.sprite.Group()
 platforms_group = pg.sprite.Group()
 hearts_group = pg.sprite.Group()
+draw_test = pg.sprite.Group()
+
+without_drawing = pg.sprite.Group()
+uppart_platforms_group = pg.sprite.Group()
+
+downpart_platforms_group = pg.sprite.Group()
 
 pg.init()
 
@@ -56,23 +64,9 @@ def any_colide_mask(first, group):
     return False
 
 
-"""
-index:
-0 - our class righter than other with wich he collide
-1 - downer
-2 - lefter
-3 - upper
-"""
-
-LEFTER = 0
-UPPER = 1
-RIGHTER = 2
-DOWNER = 3
-
-k = int(WIDTH / 960)
 # player_image = trans(load_image('adventurer-run-00.png'), 50, 37, 1, 0)
 
-tile_width = tile_height = int(60 * k)
+tile_width = tile_height = 60
 
 
 class Border(pg.sprite.Sprite):
@@ -104,40 +98,63 @@ platform_images = {
 }
 
 
+class Part(pg.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = trans(load_image("blank.png", -1), width, height, 0, 0)
+
+
 class Platform(pg.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(platforms_group, all_sprites)
         self.image = platform_images[tile_type]
         self.rect = self.image.get_rect().move(width_platform * pos_x, height_platform * pos_y)
         self.mask = pg.mask.from_surface(self.image)
+        self.up_sprite = pg.sprite.Sprite(uppart_platforms_group, draw_test, without_drawing)
+        self.up_sprite.image = trans(load_image("blank.png", -1), width_platform, 5, 0, 0)
+        self.up_sprite.image.fill((0, 255, 0))
+        if not DEGUG:
+            self.up_sprite.image.set_alpha(0)
+        self.up_sprite.rect = self.up_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y)
+
+        self.down_sprite = pg.sprite.Sprite(downpart_platforms_group, draw_test, without_drawing)
+        self.down_sprite.image = trans(load_image("blank.png", -1), width_platform, 5, 0, 0)
+        self.down_sprite.image.fill((0, 0, 255))
+        if not DEGUG:
+            self.down_sprite.image.set_alpha(0)
+        self.down_sprite.rect = self.down_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y + self.image.get_height())
 
 
 class Skelet(pg.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__(all_sprites, enemy_group)
-        self.frames = []
         img = load_image("Skeleton Walk.png", -1)
         h = 111
         img = trans(img, img.get_width() * 3, h, 0, 0)
-        self.cut_sheet(img, 13, 1)
+        self.frames_right = self.cut_sheet(img, 13, 1)
+        self.frames_left = self.cut_sheet(trans(img, img.get_width(), h, 1, 0), 13, 1)
         self.cur_frame = 0
-        self.image = self.frames[self.cur_frame]
+        self.image = self.frames_left[self.cur_frame]
         self.rect = self.image.get_rect().move(tile_width * x + 15, tile_height * y + 5)
         self.mask = pg.mask.from_surface(self.image)
         self.iteration = 0
     
     def cut_sheet(self, sheet, columns, rows):
+        frames = []
         self.rect = pg.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                self.frames.append(sheet.subsurface(pg.Rect(
+                frames.append(sheet.subsurface(pg.Rect(
                     frame_location, self.rect.size)))
+        return frames
 
     def update(self):
+        if not pg.sprite.spritecollide(self, platforms_group, False, pg.sprite.collide_mask):
+            self.rect = self.rect.move(0, 1)
         if self.iteration % 10 == 0:
-            self.cur_frame = (self.cur_frame + 1) % len(self.frames)
-            self.image = self.frames[self.cur_frame]
+            self.cur_frame = (self.cur_frame + 1) % len(self.frames_right)
+            self.image = self.frames_right[self.cur_frame]
         self.iteration = (self.iteration + 1) % 40
 
 
@@ -269,7 +286,19 @@ class Player(pg.sprite.Sprite):
 
         self.croach_counter = 0
 
-        self.speed = 300 * k / FPS
+        # self.falling_right = {
+        #     0: trans(load_image('adventurer-fall-00.png', -1), 150, 111, 0, 0),
+        #     1: trans(load_image('adventurer-fall-01.png', -1), 150, 111, 0, 0)
+        # }
+
+        # self.falling_left = {
+        #     0: trans(load_image('adventurer-jump-03.png', -1), 150, 111, 1, 0)
+        #     # 1: trans(load_image('adventurer-fall-01.png', -1), 150, 111, 1, 0)
+        # }
+
+        # self.falling_counter = 0
+
+        self.speed = 300 / FPS
 
         self.iteration = 0
 
@@ -282,14 +311,17 @@ class Player(pg.sprite.Sprite):
         self.on_ground = True
 
         self.jump_speed = self.speed * 6
-    
+
+        self.group = pg.sprite.Group()
+
     def set_speed(self, new_speed):
         self.speed = new_speed
     
     def update(self, *args):
         self.iteration = (self.iteration + 1) % 40
         # ref
-        collide = pg.sprite.spritecollide(self, platforms_group, False, pg.sprite.collide_mask)
+        collide = pg.sprite.spritecollide(self, uppart_platforms_group, False, pg.sprite.collide_mask)
+        print(collide)
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
         if not collide:
@@ -299,6 +331,13 @@ class Player(pg.sprite.Sprite):
             self.jump_speed = 6 * self.speed
             self.on_ground = True
         #
+        # if not self.on_ground and self.iteration % 4 == 0:
+        #     if self.last_right:
+        #         self.image = self.falling_right[self.falling_counter]
+        #     else:
+        #         self.image = self.falling_left[self.falling_counter]
+        #     self.falling_counter = (self.falling_counter + 1) % 1
+        #     self.is_staying = False
         if args:
             if args[0][pg.K_g] and self.iteration % 5 == 0:
                 self.hearts.take_damage()
@@ -310,7 +349,9 @@ class Player(pg.sprite.Sprite):
                 else:
                     self.image = self.attack_left[self.attack_counter]
                 self.attack_counter = (self.attack_counter + 1) % 5
-            if args[0][pg.K_SPACE] and not(args[0][pg.K_DOWN]):
+            if args[0][pg.K_SPACE]:
+                if pg.sprite.spritecollide(self, downpart_platforms_group, False, pg.sprite.collide_mask):
+                    self.jump_speed = 0
                 self.is_staying = False
                 
                 self.rect = self.rect.move(0, -self.jump_speed)
@@ -365,14 +406,16 @@ class Camera:
         self.dy = 0
         
     # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
+    def apply(self, obj, tp=None):
         obj.rect.x += self.dx
-        obj.rect.y += self.dy
+        # if tp == "under_player":
+        #     obj.rect.y += self.dy
     
     # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
-        # self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
+        
+        self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
 
 
 class Game:
@@ -457,13 +500,15 @@ class Game:
             
             self.camera.update(self.player)
             for sprite in all_sprites:
+                self.camera.apply(sprite )
+            for sprite in without_drawing:
                 self.camera.apply(sprite)
-
             hearts_group.update()
             enemy_group.update()
             clock.tick(FPS)
             all_sprites.draw(screen)
             hearts_group.draw(screen)
+            draw_test.draw(screen)
             player_group.draw(screen)
             # print(player_group)
             pg.display.flip()
