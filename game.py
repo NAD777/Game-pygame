@@ -153,7 +153,13 @@ class Skelet(pg.sprite.Sprite):
         h = 111
         img = trans(img, 858, h, 0, 0)
         self.frames_right = self.cut_sheet(img, 13, 1)
-        self.frames_left = self.cut_sheet(trans(img, img.get_width(), h, 1, 0), 13, 1)
+        self.frames_left = self.cut_sheet(img, 13, 1, 1)
+        
+        img_attack = load_image("Skeleton Attack.png", -1)
+
+        self.attack_right = self.cut_sheet(trans(img_attack, 66 * 35, h, 0, 0), 18, 1)
+        self.attack_left = self.cut_sheet(trans(img_attack, 66 * 35, h, 0, 0), 18, 1, 1)
+
         self.cur_frame = 0
         self.image = self.frames_left[self.cur_frame]
         self.rect = self.image.get_rect().move(tile_width * x, tile_height * y)
@@ -177,16 +183,21 @@ class Skelet(pg.sprite.Sprite):
         self.right_down_sprite.image.fill((0, 0, 255))
         self.right_down_sprite.rect = self.right_down_sprite.image.get_rect().move(tile_width * x + self.image.get_width() // 2 + 20, tile_height * y + self.image.get_height())
 
+        self.atack_counter = 0
+
         self.right = True
+        
+        self.atack = False
     
-    def cut_sheet(self, sheet, columns, rows):
+    def cut_sheet(self, sheet, columns, rows, reverse=0):
         frames = []
         self.rect = pg.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
         for j in range(rows):
             for i in range(columns):
                 frame_location = (self.rect.w * i, self.rect.h * j)
-                frames.append(sheet.subsurface(pg.Rect(
-                    frame_location, self.rect.size)))
+                frame = sheet.subsurface(pg.Rect(frame_location, self.rect.size))
+                frame = trans(frame, frame.get_width(), frame.get_height(), reverse, 0)
+                frames.append(frame)
         return frames
 
     def update(self, *args):
@@ -200,12 +211,20 @@ class Skelet(pg.sprite.Sprite):
         if not pg.sprite.spritecollide(self.down_sprite, platforms_group, False):
             self.move_all(0, 4)
         else:
-            self.move_all(self.speed if self.right else -self.speed, 0)
-        # if args[0][pg.K_a]:
-        #     self.move_all(-2, 0)
+            if not self.atack:
+                self.move_all(self.speed if self.right else -self.speed, 0)
+                self.atack_counter = 0
+        if args[0][pg.K_f]:
+            if self.iteration % 10 == 0:
+                self.atack = True
+                # self.rect = img.get_rect().move(self.rect.x, self.rect.y)
+                self.image = self.attack_right[self.atack_counter]
+                self.atack_counter = (self.atack_counter + 1) % 18
+        else:
+            self.atack = False
         # if args[0][pg.K_d]:
-        #     self.move_all(2, 0)
-        if self.iteration % 10 == 0:
+        #     self.image = self.frames_right[self.cur_frame]
+        if self.iteration % 10 == 0 and not self.atack:
             self.cur_frame = (self.cur_frame + 1) % len(self.frames_right)
             if self.right:
                 self.image = self.frames_right[self.cur_frame]
@@ -241,7 +260,6 @@ class Heart(pg.sprite.Sprite):
 
     def take_damage(self):
         self.col -= 1
-        print(1)
         self.damage_just_taken = True
         self.set_images()
            
