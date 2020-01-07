@@ -5,7 +5,7 @@ from math import ceil
 from copy import copy
 
 
-DEGUG = 0
+DEGUG = 1
 
 horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
@@ -21,6 +21,9 @@ without_drawing = pg.sprite.Group()
 uppart_platforms_group = pg.sprite.Group()
 
 downpart_platforms_group = pg.sprite.Group()
+leftpart_platforms_group = pg.sprite.Group()
+
+rightpart_platforms_group = pg.sprite.Group()
 
 pg.init()
 
@@ -111,18 +114,34 @@ class Platform(pg.sprite.Sprite):
         self.rect = self.image.get_rect().move(width_platform * pos_x, height_platform * pos_y)
         self.mask = pg.mask.from_surface(self.image)
         self.up_sprite = pg.sprite.Sprite(uppart_platforms_group, draw_test, without_drawing)
-        self.up_sprite.image = trans(load_image("blank.png", -1), width_platform, 5, 0, 0)
+        self.up_sprite.image = trans(load_image("blank.png", -1), width_platform - 4, 5, 0, 0)
         self.up_sprite.image.fill((0, 255, 0))
         if not DEGUG:
             self.up_sprite.image.set_alpha(0)
-        self.up_sprite.rect = self.up_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y)
+        self.up_sprite.rect = self.up_sprite.image.get_rect().move(width_platform * pos_x + 2, height_platform * pos_y)
 
         self.down_sprite = pg.sprite.Sprite(downpart_platforms_group, draw_test, without_drawing)
-        self.down_sprite.image = trans(load_image("blank.png", -1), width_platform, 5, 0, 0)
+        self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 4, 5, 0, 0)
         self.down_sprite.image.fill((0, 0, 255))
         if not DEGUG:
             self.down_sprite.image.set_alpha(0)
-        self.down_sprite.rect = self.down_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y + self.image.get_height())
+        self.down_sprite.rect = self.down_sprite.image.get_rect().move(width_platform * pos_x + 2, height_platform * pos_y + self.image.get_height())
+
+        if tile_type == 'l':
+            self.left_sprite = pg.sprite.Sprite(leftpart_platforms_group, draw_test, without_drawing)
+            self.left_sprite.image = trans(load_image("blank.png", -1), 5, height_platform, 0, 0)
+            self.left_sprite.image.fill((255, 0, 255))
+            if not DEGUG:
+                self.left_sprite.image.set_alpha(0)
+            self.left_sprite.rect = self.left_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y + 3)
+        
+        if tile_type == 'r':
+            self.right_sprite = pg.sprite.Sprite(rightpart_platforms_group, draw_test, without_drawing)
+            self.right_sprite.image = trans(load_image("blank.png", -1), 5, height_platform, 0, 0)
+            self.right_sprite.image.fill((255, 0, 0))
+            if not DEGUG:
+                self.right_sprite.image.set_alpha(0)
+            self.right_sprite.rect = self.right_sprite.image.get_rect().move(width_platform * pos_x + self.image.get_width(), height_platform * pos_y + 3)
 
 
 class Skelet(pg.sprite.Sprite):
@@ -321,7 +340,7 @@ class Player(pg.sprite.Sprite):
         self.iteration = (self.iteration + 1) % 40
         # ref
         collide = pg.sprite.spritecollide(self, uppart_platforms_group, False, pg.sprite.collide_mask)
-        print(collide)
+        # print(collide)
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
         if not collide:
@@ -368,7 +387,8 @@ class Player(pg.sprite.Sprite):
                     else:
                         self.image = self.croach_left[self.croach_counter]
                     self.croach_counter = (self.croach_counter + 1) % 4
-            if args[0][pg.K_LEFT]:
+            # print(pg.sprite.spritecollide(self, leftpart_platforms_group, False, pg.sprite.collide_mask))
+            if args[0][pg.K_LEFT] and not pg.sprite.spritecollide(self, rightpart_platforms_group, False, pg.sprite.collide_mask):
                 self.is_staying = False
                 self.last_right = False
                 
@@ -377,7 +397,7 @@ class Player(pg.sprite.Sprite):
                     self.run_counter = (self.run_counter + 1) % 6
                 
                 self.rect = self.rect.move(-self.speed, 0)
-            if args[0][pg.K_RIGHT]:
+            if args[0][pg.K_RIGHT] and not pg.sprite.spritecollide(self, leftpart_platforms_group, False, pg.sprite.collide_mask):
                 self.is_staying = False
                 self.last_right = True
                 
