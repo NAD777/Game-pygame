@@ -190,7 +190,19 @@ class Skelet(pg.sprite.Sprite):
         self.atack = False
 
         self.moved_for_left_attack = False
+
+        self.left_atack_sprite = pg.sprite.Sprite(without_drawing)
+        self.left_atack_sprite.image = trans(load_image("blank.png", -1), self.image.get_width() * 1 // 3, self.image.get_height(), 0, 0)
+        self.left_atack_sprite.image.fill((0, 0, 255))
+        self.left_atack_sprite.image.set_alpha(50)
+        self.left_atack_sprite.rect = self.left_atack_sprite.image.get_rect().move(tile_width * x - self.image.get_width() * 1 // 3, tile_height * y)
     
+        self.right_atack_sprite = pg.sprite.Sprite(without_drawing)
+        self.right_atack_sprite.image = trans(load_image("blank.png", -1), self.image.get_width() * 1 // 3, self.image.get_height(), 0, 0)
+        self.right_atack_sprite.image.fill((255, 255, 0))
+        self.right_atack_sprite.image.set_alpha(50)
+        self.right_atack_sprite.rect = self.left_atack_sprite.image.get_rect().move(tile_width * x + self.image.get_width(), tile_height * y)
+
     def cut_sheet(self, sheet, columns, rows, reverse=0):
         frames = []
         self.rect = pg.Rect(0, 0, sheet.get_width() // columns, sheet.get_height() // rows)
@@ -216,9 +228,9 @@ class Skelet(pg.sprite.Sprite):
             if not self.atack:
                 self.move_all(self.speed if self.right else -self.speed, 0)
                 self.atack_counter = 0
-        
-        if args[0][pg.K_f]:
-            if self.iteration % 10 == 0:
+        if (pg.sprite.spritecollide(self.left_atack_sprite, player_group, False, pg.sprite.collide_mask) and not self.right) or \
+                (pg.sprite.spritecollide(self.right_atack_sprite, player_group, False, pg.sprite.collide_mask) and self.right):
+            if self.iteration % 5 == 0:
                 self.atack = True
                 if not self.right:
                     if not self.moved_for_left_attack:
@@ -253,6 +265,8 @@ class Skelet(pg.sprite.Sprite):
         self.left_down_sprite.rect = self.left_down_sprite.rect.move(x, y)
         self.right_down_sprite.rect = self.right_down_sprite.rect.move(x, y)
         self.down_sprite.rect = self.down_sprite.rect.move(x, y)
+        self.left_atack_sprite.rect = self.left_atack_sprite.rect.move(x, y)
+        self.right_atack_sprite.rect = self.right_atack_sprite.rect.move(x, y)
 
 
 class Heart(pg.sprite.Sprite):
@@ -414,6 +428,10 @@ class Player(pg.sprite.Sprite):
 
         self.jump_speed = self.speed * 6
 
+        self.counter_for_take_damage = 0
+
+        self.several_damage_in_row = False
+
         # self.down_sprite = pg.sprite.Sprite(without_drawing, player_down)
         # self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 4, 5, 0, 0)
         # self.down_sprite.image.fill((0, 0, 255))
@@ -423,7 +441,6 @@ class Player(pg.sprite.Sprite):
         self.speed = new_speed
     
     def update(self, *args):
-        self.iteration = (self.iteration + 1) % 40
         # ref
         collide = pg.sprite.spritecollide(self, uppart_platforms_group, False, pg.sprite.collide_mask)
         # print(collide)
@@ -435,6 +452,9 @@ class Player(pg.sprite.Sprite):
         else:
             self.jump_speed = 6 * self.speed
             self.on_ground = True
+        
+        collide_with_enemys = pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)
+        
         #
         # if not self.on_ground and self.iteration % 4 == 0:
         #     if self.last_right:
@@ -448,12 +468,23 @@ class Player(pg.sprite.Sprite):
                 self.hearts.take_damage()
 
             self.mask = pg.mask.from_surface(self.image)
-            if args[0][pg.K_f] and self.iteration % 3 == 0:
-                if self.last_right:
-                    self.image = self.attack_right[self.attack_counter]
+            if args[0][pg.K_f]:
+                if self.iteration % 3 == 0:
+                    if self.last_right:
+                        self.image = self.attack_right[self.attack_counter]
+                    else:
+                        self.image = self.attack_left[self.attack_counter]
+                    self.attack_counter = (self.attack_counter + 1) % 5
+            else:
+                if collide_with_enemys:
+                    self.counter_for_take_damage += 1
+                    if self.counter_for_take_damage == 40 * (2 if self.several_damage_in_row else 1):
+                        self.several_damage_in_row = True
+                        self.hearts.take_damage()
+                        self.counter_for_take_damage = 0
                 else:
-                    self.image = self.attack_left[self.attack_counter]
-                self.attack_counter = (self.attack_counter + 1) % 5
+                    self.several_damage_in_row = False
+                    self.counter_for_take_damage = 0
             if args[0][pg.K_SPACE]:
                 if pg.sprite.spritecollide(self, downpart_platforms_group, False, pg.sprite.collide_mask):
                     self.jump_speed = 0
@@ -503,6 +534,7 @@ class Player(pg.sprite.Sprite):
                 # print(self.idle_counter)
         self.is_staying = True
         self.mask = pg.mask.from_surface(self.image)
+        self.iteration = (self.iteration + 1) % 40
 
 
 class Camera:
@@ -519,13 +551,12 @@ class Camera:
             # obj.rect.y -= self.dy
         else:    
             obj.rect.x += self.dx
-    
+
     # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
-        
         self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
-
+        
 
 class Game:
     def __init__(self):
