@@ -185,9 +185,11 @@ class Skelet(pg.sprite.Sprite):
 
         self.atack_counter = 0
 
-        self.right = True
+        self.right = False
         
         self.atack = False
+
+        self.moved_for_left_attack = False
     
     def cut_sheet(self, sheet, columns, rows, reverse=0):
         frames = []
@@ -201,7 +203,7 @@ class Skelet(pg.sprite.Sprite):
         return frames
 
     def update(self, *args):
-        print(pg.sprite.spritecollide(self.left_down_sprite, uppart_platforms_group, False))
+        # print(pg.sprite.spritecollide(self.left_down_sprite, uppart_platforms_group, False))
         left_part_collide = pg.sprite.spritecollide(self.left_down_sprite, uppart_platforms_group, False)
         right_part_collide = pg.sprite.spritecollide(self.right_down_sprite, uppart_platforms_group, False)
         if not left_part_collide:
@@ -214,14 +216,28 @@ class Skelet(pg.sprite.Sprite):
             if not self.atack:
                 self.move_all(self.speed if self.right else -self.speed, 0)
                 self.atack_counter = 0
+        
         if args[0][pg.K_f]:
             if self.iteration % 10 == 0:
                 self.atack = True
-                # self.rect = img.get_rect().move(self.rect.x, self.rect.y)
-                self.image = self.attack_right[self.atack_counter]
+                if not self.right:
+                    if not self.moved_for_left_attack:
+                        self.rect = self.rect.move(-55, 0)
+                        self.moved_for_left_attack = True
+                    self.image = self.attack_left[self.atack_counter]
+                else:
+                    self.image = self.attack_right[self.atack_counter]
                 self.atack_counter = (self.atack_counter + 1) % 18
         else:
+            if self.moved_for_left_attack:
+                self.rect = self.rect.move(55, 0)
+                self.moved_for_left_attack = False
+            if self.right:
+                self.image = self.frames_right[self.cur_frame]
+            else:
+                self.image = self.frames_left[self.cur_frame]
             self.atack = False
+            self.atack_counter = 0 
         # if args[0][pg.K_d]:
         #     self.image = self.frames_right[self.cur_frame]
         if self.iteration % 10 == 0 and not self.atack:
