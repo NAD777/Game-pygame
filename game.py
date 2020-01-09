@@ -5,7 +5,7 @@ from math import ceil
 from copy import copy
 
 
-DEGUG = 1
+DEGUG = 0
 
 horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
@@ -44,7 +44,7 @@ clock = pg.time.Clock()
 def load_image(name, color_key=None, x=0, y=0):
     fullname = os.path.join('data', name)
     image = pg.image.load(fullname).convert()
-    if color_key is not None: 
+    if color_key is not None:
         if color_key == -1:
             if x == 1 and y == 1:
                 color_key = image.get_at((image.get_width() - 1, image.get_height() - 1))
@@ -93,12 +93,12 @@ width_platform = ceil(WIDTH // 16)
 height_platform = ceil(HEIGHT // 9)
 
 tile_images = {
-    'box': trans(load_image('box.png'), width_platform, height_platform, 0, 0), 
+    'box': trans(load_image('box.png'), width_platform, height_platform, 0, 0),
     'grass': trans(load_image('box.png'), width_platform, height_platform, 0, 0)
 }
 platform_images = {
-    'l': trans(load_image('platform1.png', -1, 1), width_platform, height_platform, 0, 0), 
-    'm': trans(load_image('platform2.png'), width_platform, height_platform, 0, 0), 
+    'l': trans(load_image('platform1.png', -1, 1), width_platform, height_platform, 0, 0),
+    'm': trans(load_image('platform2.png'), width_platform, height_platform, 0, 0),
     "r": trans(load_image('platform3.png', -1, 1, 1), width_platform, height_platform, 0, 0)
 }
 
@@ -136,7 +136,7 @@ class Platform(pg.sprite.Sprite):
             # if not DEGUG:
             #     self.left_sprite.image.set_alpha(0)
             self.left_sprite.rect = self.left_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y + 3)
-        
+
         if tile_type == 'r':
             self.right_sprite = pg.sprite.Sprite(rightpart_platforms_group, without_drawing)
             self.right_sprite.image = trans(load_image("blank.png", -1), 5, height_platform, 0, 0)
@@ -154,7 +154,7 @@ class Skelet(pg.sprite.Sprite):
         img = trans(img, 858, h, 0, 0)
         self.frames_right = self.cut_sheet(img, 13, 1)
         self.frames_left = self.cut_sheet(img, 13, 1, 1)
-        
+
         img_attack = load_image("Skeleton Attack.png", -1)
 
         self.attack_right = self.cut_sheet(trans(img_attack, 66 * 35, h, 0, 0), 18, 1)
@@ -186,7 +186,7 @@ class Skelet(pg.sprite.Sprite):
         self.atack_counter = 0
 
         self.right = False
-        
+
         self.atack = False
 
         self.moved_for_left_attack = False
@@ -196,7 +196,7 @@ class Skelet(pg.sprite.Sprite):
         self.left_atack_sprite.image.fill((0, 0, 255))
         self.left_atack_sprite.image.set_alpha(50)
         self.left_atack_sprite.rect = self.left_atack_sprite.image.get_rect().move(tile_width * x - self.image.get_width() * 1 // 3, tile_height * y)
-    
+
         self.right_atack_sprite = pg.sprite.Sprite(without_drawing)
         self.right_atack_sprite.image = trans(load_image("blank.png", -1), self.image.get_width() * 1 // 3, self.image.get_height(), 0, 0)
         self.right_atack_sprite.image.fill((255, 255, 0))
@@ -249,7 +249,7 @@ class Skelet(pg.sprite.Sprite):
             else:
                 self.image = self.frames_left[self.cur_frame]
             self.atack = False
-            self.atack_counter = 0 
+            self.atack_counter = 0
         # if args[0][pg.K_d]:
         #     self.image = self.frames_right[self.cur_frame]
         if self.iteration % 10 == 0 and not self.atack:
@@ -275,15 +275,15 @@ class Heart(pg.sprite.Sprite):
         self.hearts = [trans(load_image(f'fulllife/h{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 14)]
         self.image = self.hearts[0]
         self.rect = self.image.get_rect().move(15, 5)
-        
+
         self.col = 4
-        
+
         self.iteration = 0
 
-        self.counter = 0 
+        self.counter = 0
 
         self.mod = 13
-        
+
         self.damage_just_taken = False
 
         self.col_blinks = 0
@@ -292,7 +292,7 @@ class Heart(pg.sprite.Sprite):
         self.col -= 1
         self.damage_just_taken = True
         self.set_images()
-           
+
     def set_images(self):
         if self.col == 3:
             self.mod = 13
@@ -347,7 +347,7 @@ class Player(pg.sprite.Sprite):
             1: trans(load_image('adventurer-idle-01.png', -1), 150, 111, 1, 0),
             2: trans(load_image('adventurer-idle-02.png', -1), 150, 111, 1, 0)
         }
-        
+
         self.run_right = {
             0: trans(load_image('adventurer-run-00.png', -1), 150, 111, 0, 0),
             1: trans(load_image('adventurer-run-01.png', -1), 150, 111, 0, 0),
@@ -375,7 +375,7 @@ class Player(pg.sprite.Sprite):
             3: trans(load_image('adventurer-attack1-03.png', -1), 150, 111, 0, 0),
             4: trans(load_image('adventurer-attack1-04.png', -1), 150, 111, 0, 0)
         }
-        
+
         self.attack_left = {
             0: trans(load_image('adventurer-attack1-00.png', -1), 150, 111, 1, 0),
             1: trans(load_image('adventurer-attack1-01.png', -1), 150, 111, 1, 0),
@@ -439,7 +439,7 @@ class Player(pg.sprite.Sprite):
 
     def set_speed(self, new_speed):
         self.speed = new_speed
-    
+
     def update(self, *args):
         # ref
         collide = pg.sprite.spritecollide(self, uppart_platforms_group, False, pg.sprite.collide_mask)
@@ -452,9 +452,9 @@ class Player(pg.sprite.Sprite):
         else:
             self.jump_speed = 6 * self.speed
             self.on_ground = True
-        
+
         collide_with_enemys = pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)
-        
+
         #
         # if not self.on_ground and self.iteration % 4 == 0:
         #     if self.last_right:
@@ -489,7 +489,7 @@ class Player(pg.sprite.Sprite):
                 if pg.sprite.spritecollide(self, downpart_platforms_group, False, pg.sprite.collide_mask):
                     self.jump_speed = 0
                 self.is_staying = False
-                
+
                 self.rect = self.rect.move(0, -self.jump_speed)
                 self.jump_speed -= self.speed // 3
                 self.jump_speed = max(self.jump_speed, 0)
@@ -508,16 +508,16 @@ class Player(pg.sprite.Sprite):
             if args[0][pg.K_LEFT] and not pg.sprite.spritecollide(self, rightpart_platforms_group, False, pg.sprite.collide_mask):
                 self.is_staying = False
                 self.last_right = False
-                
+
                 if self.iteration % 5 == 0:
                     self.image = self.run_left[self.run_counter]
                     self.run_counter = (self.run_counter + 1) % 6
-                
+
                 self.rect = self.rect.move(-self.speed, 0)
             if args[0][pg.K_RIGHT] and not pg.sprite.spritecollide(self, leftpart_platforms_group, False, pg.sprite.collide_mask):
                 self.is_staying = False
                 self.last_right = True
-                
+
                 if self.iteration % 5 == 0:
                     self.image = self.run_right[self.run_counter]
                     self.run_counter = (self.run_counter + 1) % 6
@@ -542,39 +542,39 @@ class Camera:
     def __init__(self):
         self.dx = 0
         self.dy = 0
-        
+
     # сдвинуть объект obj на смещение камеры
     def apply(self, obj, tp=None):
-        
+
         if tp == "under_player":
             obj.rect.x -= self.dx
             # obj.rect.y -= self.dy
-        else:    
+        else:
             obj.rect.x += self.dx
 
     # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - WIDTH // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - HEIGHT // 2)
-        
+
 
 class Game:
     def __init__(self):
         self.running = True
         self.start()
-    
+
     def load_level(self, filename):
         filename = "data/" + filename
         # читаем уровень, убирая символы перевода строки
         with open(filename, 'r') as mapFile:
             level_map = [line.strip() for line in mapFile]
 
-        # и подсчитываем максимальную длину    
+        # и подсчитываем максимальную длину
         self.max_width = max(map(len, level_map))
 
-        # дополняем каждую строку пустыми клетками ('.')    
+        # дополняем каждую строку пустыми клетками ('.')
         return list(map(lambda x: x.ljust(self.max_width, '.'), level_map))
-    
+
     def generate_level(self, level):
         # new_player, x, y = None, None, None
         for y in range(len(level)):
@@ -588,7 +588,7 @@ class Game:
                     self.player_y = y
                 elif level[y][x] == 'E':
                     Skelet(x, y)
-    # вернем игрока, а также размер поля в клетках            
+    # вернем игрока, а также размер поля в клетках
         # return new_player, x, y
 
     def start_screen(self):
@@ -637,7 +637,7 @@ class Game:
                 # if event.type == pg.KEYDOWN:
             pressed = pg.key.get_pressed()
             player_group.update(pressed)
-            
+
             self.camera.update(self.player)
             for sprite in all_sprites:
                 self.camera.apply(sprite)
