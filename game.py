@@ -5,7 +5,7 @@ from math import ceil
 from copy import copy
 
 
-DEGUG = 0
+DEGUG = 1
 
 horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
@@ -33,7 +33,7 @@ cfg = open("cfg.json", "r")
 data = json.load(cfg)
 cfg.close()
 
-SIZE = WIDTH, HEIGHT = tuple(map(int, data['resolution'].split(';')))
+SIZE = WIDTH, HEIGHT = 960, 540
 FPS = int(data['fps'])
 
 screen = pg.display.set_mode(SIZE)
@@ -215,7 +215,6 @@ class Skelet(pg.sprite.Sprite):
         return frames
 
     def update(self, *args):
-        # print(pg.sprite.spritecollide(self.left_down_sprite, uppart_platforms_group, False))
         left_part_collide = pg.sprite.spritecollide(self.left_down_sprite, uppart_platforms_group, False)
         right_part_collide = pg.sprite.spritecollide(self.right_down_sprite, uppart_platforms_group, False)
         if not left_part_collide:
@@ -259,6 +258,7 @@ class Skelet(pg.sprite.Sprite):
             else:
                 self.image = self.frames_left[self.cur_frame]
         self.iteration = (self.iteration + 1) % 40
+        self.mask = pg.mask.from_surface(self.image)
 
     def move_all(self, x, y):
         self.rect = self.rect.move(x, y)
@@ -454,7 +454,7 @@ class Player(pg.sprite.Sprite):
             self.on_ground = True
 
         collide_with_enemys = pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)
-
+        print(collide_with_enemys)
         #
         # if not self.on_ground and self.iteration % 4 == 0:
         #     if self.last_right:
@@ -478,7 +478,7 @@ class Player(pg.sprite.Sprite):
             else:
                 if collide_with_enemys:
                     self.counter_for_take_damage += 1
-                    if self.counter_for_take_damage == 40 * (2 if self.several_damage_in_row else 1):
+                    if self.counter_for_take_damage == 30 * (2 if self.several_damage_in_row else 1):
                         self.several_damage_in_row = True
                         self.hearts.take_damage()
                         self.counter_for_take_damage = 0

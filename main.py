@@ -23,8 +23,7 @@ class MainWindow(QMainWindow):
         cfg = open("cfg.json", "r")
         data = json.load(cfg)
         cfg.close()
-        
-        data['resolution'] = self.resolutions.currentText().replace(" × ", ";")
+
         data['fps'] = self.fps.currentText()
 
         print(data)
@@ -37,15 +36,6 @@ class MainWindow(QMainWindow):
         data = json.load(self.all_cfg)
         cfg = json.load(self.cfg)
         print(data)
-        items = data["resolutions"]
-        try:
-            items.remove(cfg["resolution"])
-        except ValueError:
-            pass
-        items = map(lambda x: x.replace(";", " × "), items)
-            
-        self.resolutions.addItem(cfg["resolution"].replace(";", " × "))
-        self.resolutions.addItems(items)
 
         try:
             fps = data['fps']
