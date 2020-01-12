@@ -29,6 +29,8 @@ player_down = pg.sprite.Group()
 
 dead_group = pg.sprite.Group()
 
+draw_on_screen = pg.sprite.Group()
+
 pg.init()
 
 cfg = open("cfg.json", "r")
@@ -41,6 +43,8 @@ FPS = int(data['fps'])
 screen = pg.display.set_mode(SIZE)
 screen.fill((0, 0, 0))
 clock = pg.time.Clock()
+
+GAME_OVER = False
 
 
 def load_image(name, color_key=None, x=0, y=0):
@@ -326,9 +330,9 @@ class Heart(pg.sprite.Sprite):
         self.col_blinks = 0
 
         self.die = False
+        self.after_death_iterations_counter = 0
 
     def is_dead(self):
-        print(self.die)
         return self.die
 
     def take_damage(self):
@@ -353,6 +357,11 @@ class Heart(pg.sprite.Sprite):
             print("DEATH!")
 
     def update(self):
+        if self.die:
+            self.after_death_iterations_counter += 1
+            if self.after_death_iterations_counter == 80:
+                global GAME_OVER
+                GAME_OVER = True
         self.iteration = (self.iteration + 1) % 40
         # print(self.col_blinks)
         if self.damage_just_taken and self.iteration % 5 == 0:
@@ -716,9 +725,7 @@ class Game:
             clock.tick(FPS)
     
     def pause(self):
-        # print("PAUSE")
         fon = pg.transform.scale(load_image('back.png', -1), (WIDTH, HEIGHT))
-        # fon.set_alpha(20)
 
         on_pause = pg.sprite.Group()
 
@@ -741,10 +748,42 @@ class Game:
                 if event.type == pg.QUIT:
                     self.terminate()
                 elif event.type == pg.KEYDOWN:
-                    return  # начинаем игру
+                    return  # продолжаем игру
                 if event.type == pg.MOUSEBUTTONUP:
                     if cont.rect.collidepoint(event.pos):
                         return
+                    if ext.rect.collidepoint(event.pos):
+                        self.terminate()
+            pg.display.flip()
+            clock.tick(FPS)
+
+    def game_over(self):
+        screen.fill((0, 0, 0))
+        fon = pg.transform.scale(load_image('death.jpg', -1), (WIDTH, HEIGHT))
+        
+        on_death = pg.sprite.Group()
+        
+        ext = pg.sprite.Sprite(on_death)
+        image = load_image("des.png")
+        ext.image = trans(image, image.get_width() // 2, image.get_height() // 2, 0, 0)
+        ext.rect = ext.image.get_rect().move(WIDTH // 2 - ext.image.get_width() // 2, HEIGHT - ext.image.get_height() * 2)
+        
+        img = trans(load_image('grob.png', -1), 400, 400, 0, 0)
+        player = pg.sprite.Sprite(on_death)
+        player.image = img
+
+        player.rect = ext.image.get_rect().move(WIDTH // 2 - player.image.get_width() // 2, HEIGHT // 2 - player.image.get_height() // 2)
+        screen.blit(fon, (0, 0))
+
+        on_death.draw(screen)
+        while True:
+            # print(iterations)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.terminate()
+                elif event.type == pg.KEYDOWN:
+                    return
+                if event.type == pg.MOUSEBUTTONUP:
                     if ext.rect.collidepoint(event.pos):
                         self.terminate()
             pg.display.flip()
@@ -764,6 +803,8 @@ class Game:
         screen.blit(back_ground, (0, 0))
         self.generate_level(self.load_level("map.txt"))
         while self.running:
+            if GAME_OVER:
+                self.game_over()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.running = False
