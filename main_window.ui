@@ -27,16 +27,6 @@
      <string>Старт</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="resolutions">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>100</y>
-      <width>121</width>
-      <height>26</height>
-     </rect>
-    </property>
-   </widget>
    <widget class="QPushButton" name="exit_btn">
     <property name="geometry">
      <rect>
@@ -48,19 +38,6 @@
     </property>
     <property name="text">
      <string>Выход</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>100</y>
-      <width>101</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Расширение:</string>
     </property>
    </widget>
    <widget class="QComboBox" name="fps">

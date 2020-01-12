@@ -644,7 +644,7 @@ class Game:
         intro_text = ["ЗАСТАВКА", "",
                     "Нажмите кнопку мыши для начала!"]
 
-        fon = pg.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+        fon = pg.transform.scale(load_image('back.png'), (WIDTH, HEIGHT))
         screen.blit(fon, (0, 0))
         font = pg.font.Font(None, 30)
         text_coord = 50
@@ -663,6 +663,41 @@ class Game:
                     self.terminate()
                 elif event.type == pg.KEYDOWN or event.type == pg.MOUSEBUTTONDOWN:
                     return  # начинаем игру
+            pg.display.flip()
+            clock.tick(FPS)
+    
+    def pause(self):
+        # print("PAUSE")
+        fon = pg.transform.scale(load_image('back.png', -1), (WIDTH, HEIGHT))
+        # fon.set_alpha(20)
+
+        on_pause = pg.sprite.Group()
+
+        screen.blit(fon, (0, 0))
+
+        cont = pg.sprite.Sprite(on_pause)
+        image = load_image("continue.png")
+        cont.image = trans(image, image.get_width() // 2, image.get_height() // 2, 0, 0)
+        cont.rect = cont.image.get_rect().move(WIDTH // 2 - cont.image.get_width() // 2, HEIGHT // 2 - cont.image.get_height() // 2)
+        
+        ext = pg.sprite.Sprite(on_pause)
+        image = load_image("exit.png")
+        ext.image = trans(image, image.get_width() // 2, image.get_height() // 2, 0, 0)
+        ext.rect = ext.image.get_rect().move(WIDTH // 2 - ext.image.get_width() // 2, HEIGHT // 2 + cont.image.get_height())
+
+        on_pause.draw(screen)
+
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.terminate()
+                elif event.type == pg.KEYDOWN:
+                    return  # начинаем игру
+                if event.type == pg.MOUSEBUTTONUP:
+                    if cont.rect.collidepoint(event.pos):
+                        return
+                    if ext.rect.collidepoint(event.pos):
+                        self.terminate()
             pg.display.flip()
             clock.tick(FPS)
 
@@ -684,6 +719,9 @@ class Game:
                 if event.type == pg.QUIT:
                     self.running = False
                 # if event.type == pg.KEYDOWN:
+                if event.type == pg.KEYDOWN:
+                    if event.key == pg.K_ESCAPE:
+                        self.pause()
             pressed = pg.key.get_pressed()
             player_group.update(pressed)
 
