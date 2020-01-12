@@ -325,8 +325,14 @@ class Heart(pg.sprite.Sprite):
 
         self.col_blinks = 0
 
+        self.die = False
+
+    def is_dead(self):
+        print(self.die)
+        return self.die
+
     def take_damage(self):
-        self.col -= 1
+        self.col = max(0, self.col - 1)
         self.damage_just_taken = True
         self.set_images()
 
@@ -343,6 +349,7 @@ class Heart(pg.sprite.Sprite):
         if self.col == 0:
             self.hearts = [trans(load_image(f'death/death{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 3)]
             self.mod = 2
+            self.die = True
             print("DEATH!")
 
     def update(self):
@@ -451,6 +458,28 @@ class Player(pg.sprite.Sprite):
 
         # self.falling_counter = 0
 
+        self.die_right = {
+            0: trans(load_image('adventurer-die-00.png', -1), 150, 111, 0, 0),
+            1: trans(load_image('adventurer-die-01.png', -1), 150, 111, 0, 0),
+            2: trans(load_image('adventurer-die-02.png', -1), 150, 111, 0, 0),
+            3: trans(load_image('adventurer-die-03.png', -1), 150, 111, 0, 0),
+            4: trans(load_image('adventurer-die-04.png', -1), 150, 111, 0, 0),
+            5: trans(load_image('adventurer-die-05.png', -1), 150, 111, 0, 0),
+            6: trans(load_image('adventurer-die-06.png', -1), 150, 111, 0, 0)
+        }
+
+        self.die_left = {
+            0: trans(load_image('adventurer-die-00.png', -1), 150, 111, 1, 0),
+            1: trans(load_image('adventurer-die-01.png', -1), 150, 111, 1, 0),
+            2: trans(load_image('adventurer-die-02.png', -1), 150, 111, 1, 0),
+            3: trans(load_image('adventurer-die-03.png', -1), 150, 111, 1, 0),
+            4: trans(load_image('adventurer-die-04.png', -1), 150, 111, 1, 0),
+            5: trans(load_image('adventurer-die-05.png', -1), 150, 111, 1, 0),
+            6: trans(load_image('adventurer-die-06.png', -1), 150, 111, 1, 0)
+        }
+
+        self.die_counter = 0
+
         self.speed = 300 / FPS
 
         self.iteration = 0
@@ -474,7 +503,9 @@ class Player(pg.sprite.Sprite):
         self.down_sprite = pg.sprite.Sprite(without_drawing, player_down)
         self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 25, 10, 0, 0)
         self.down_sprite.image.fill((0, 0, 255))
-        self.down_sprite.rect = self.down_sprite.image.get_rect().move(self.rect.x + width_platform - 10, self.rect.y + self.image.get_height() - 10)
+        self.down_sprite.rect = self.down_sprite.image.get_rect().move(self.rect.x + width_platform - 10, self.rect.y + self.image.get_height() - 5)
+
+        self.add_dead_group = False
 
     def set_speed(self, new_speed):
         self.speed = new_speed
@@ -486,11 +517,20 @@ class Player(pg.sprite.Sprite):
         return False
 
     def update(self, *args):
-        # ref
+        self.iteration = (self.iteration + 1) % 40
+        if self.hearts.is_dead():
+            if self.iteration % 10 == 0:
+                if self.last_right:
+                    self.image = self.die_right[self.die_counter]
+                else:
+                    self.image = self.die_left[self.die_counter]
+                self.die_counter = self.die_counter + 1
+                if self.die_counter == len(self.die_right):
+                    self.kill()
+                    self.add(dead_group)
+                    self.add_dead_group = True
+            return
         collide = pg.sprite.spritecollide(self.down_sprite, uppart_platforms_group, False, pg.sprite.collide_mask)
-        # print(collide)
-        # for el in collide:
-            # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
         if not collide:
             self.rect = self.rect.move(0, self.speed * 2)
             self.on_ground = False
@@ -587,7 +627,7 @@ class Player(pg.sprite.Sprite):
                 # print(self.idle_counter)
         self.is_staying = True
         self.mask = pg.mask.from_surface(self.image)
-        self.iteration = (self.iteration + 1) % 40
+        
         self.down_sprite.rect = self.down_sprite.image.get_rect().move(self.rect.x + width_platform - 10, self.rect.y + self.image.get_height() - 10)
 
 
