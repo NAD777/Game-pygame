@@ -75,8 +75,6 @@ def any_colide_mask(first, group):
     return False
 
 
-# player_image = trans(load_image('adventurer-run-00.png'), 50, 37, 1, 0)
-
 tile_width = tile_height = 60
 
 
@@ -112,7 +110,8 @@ class Object(pg.sprite.Sprite):
             'g': trans(load_image('grass1.png', -1), width_platform, height_platform // 2, 0, 0),
             'G': trans(load_image('grass2.png', -1), width_platform, height_platform // 2, 0, 0),
             'B': trans(load_image('bush.png', -1), width_platform, height_platform, 0, 0),
-            'x': trans(load_image('big-crate.png'), width_platform, height_platform, 0, 0)
+            'x': trans(load_image('big-crate.png'), width_platform, height_platform, 0, 0),
+            'o': trans(load_image('rock.png', -1), width_platform, height_platform // 2, 0, 0),
         }
         
         self.image = self.images[tile_type]
@@ -134,31 +133,23 @@ class Platform(pg.sprite.Sprite):
         self.up_sprite = pg.sprite.Sprite(uppart_platforms_group, without_drawing)
         self.up_sprite.image = trans(load_image("blank.png", -1), width_platform - 4, 5, 0, 0)
         self.up_sprite.image.fill((0, 255, 0))
-        # if not DEGUG:
-        #     self.up_sprite.image.set_alpha(0)
         self.up_sprite.rect = self.up_sprite.image.get_rect().move(width_platform * pos_x + 2, height_platform * pos_y)
 
         self.down_sprite = pg.sprite.Sprite(downpart_platforms_group, without_drawing)
         self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 4, 5, 0, 0)
         self.down_sprite.image.fill((0, 0, 255))
-        # if not DEGUG:
-        #     self.down_sprite.image.set_alpha(0)
         self.down_sprite.rect = self.down_sprite.image.get_rect().move(width_platform * pos_x + 2, height_platform * pos_y + self.image.get_height())
 
         if tile_type in ['l', 'L']:
             self.left_sprite = pg.sprite.Sprite(leftpart_platforms_group, without_drawing)
             self.left_sprite.image = trans(load_image("blank.png", -1), 5, height_platform, 0, 0)
             self.left_sprite.image.fill((255, 0, 255))
-            # if not DEGUG:
-            #     self.left_sprite.image.set_alpha(0)
             self.left_sprite.rect = self.left_sprite.image.get_rect().move(width_platform * pos_x, height_platform * pos_y + 3)
 
         if tile_type in ['r', 'R']:
             self.right_sprite = pg.sprite.Sprite(rightpart_platforms_group, without_drawing)
             self.right_sprite.image = trans(load_image("blank.png", -1), 5, height_platform, 0, 0)
             self.right_sprite.image.fill((255, 0, 0))
-            # if not DEGUG:
-                # self.right_sprite.image.set_alpha(0)
             self.right_sprite.rect = self.right_sprite.image.get_rect().move(width_platform * pos_x + self.image.get_width(), height_platform * pos_y + 3)
 
 
@@ -191,7 +182,6 @@ class Skelet(pg.sprite.Sprite):
         self.down_sprite = pg.sprite.Sprite(without_drawing)
         self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 10, 5, 0, 0)
         self.down_sprite.image.fill((0, 255, 255))
-        # self.down_sprite.image.set_alpha(0)
         self.down_sprite.rect = self.down_sprite.image.get_rect().move(tile_width * x - 5, tile_height * y + self.image.get_height() - 4)
 
         self.left_down_sprite = pg.sprite.Sprite(without_drawing)
@@ -246,7 +236,6 @@ class Skelet(pg.sprite.Sprite):
         return frames
 
     def update(self, *args):
-        # self.counter_for_take_damage = (self.counter_for_take_damage + 1) % 40
         if self.dead and self.iteration % 10 == 0:
             if self.right:
                 self.image = self.death_right[self.dead_counter]
@@ -294,8 +283,6 @@ class Skelet(pg.sprite.Sprite):
                 self.image = self.frames_left[self.cur_frame]
             self.attack = False
             self.attack_counter = 0
-        # if args[0][pg.K_d]:
-        #     self.image = self.frames_right[self.cur_frame]
         if self.iteration % 7 == 0 and not self.attack:
             self.cur_frame = (self.cur_frame + 1) % len(self.frames_right)
             if self.right:
@@ -459,18 +446,6 @@ class Player(pg.sprite.Sprite):
 
         self.croach_counter = 0
 
-        # self.falling_right = {
-        #     0: trans(load_image('adventurer-fall-00.png', -1), 150, 111, 0, 0),
-        #     1: trans(load_image('adventurer-fall-01.png', -1), 150, 111, 0, 0)
-        # }
-
-        # self.falling_left = {
-        #     0: trans(load_image('adventurer-jump-03.png', -1), 150, 111, 1, 0)
-        #     # 1: trans(load_image('adventurer-fall-01.png', -1), 150, 111, 1, 0)
-        # }
-
-        # self.falling_counter = 0
-
         self.die_right = {
             0: trans(load_image('adventurer-die-00.png', -1), 150, 111, 0, 0),
             1: trans(load_image('adventurer-die-01.png', -1), 150, 111, 0, 0),
@@ -552,15 +527,6 @@ class Player(pg.sprite.Sprite):
             self.on_ground = True
 
         collide_with_enemys = pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)
-        # print(collide_with_enemys)
-        #
-        # if not self.on_ground and self.iteration % 4 == 0:
-        #     if self.last_right:
-        #         self.image = self.falling_right[self.falling_counter]
-        #     else:
-        #         self.image = self.falling_left[self.falling_counter]
-        #     self.falling_counter = (self.falling_counter + 1) % 1
-        #     self.is_staying = False
         if args:
             if args[0][pg.K_g] and self.iteration % 5 == 0:
                 self.hearts.take_damage()
@@ -610,7 +576,6 @@ class Player(pg.sprite.Sprite):
                     else:
                         self.image = self.croach_left[self.croach_counter]
                     self.croach_counter = (self.croach_counter + 1) % 4
-            # print(pg.sprite.spritecollide(self, leftpart_platforms_group, False, pg.sprite.collide_mask))
             if args[0][pg.K_LEFT] and not pg.sprite.spritecollide(self, rightpart_platforms_group, False, pg.sprite.collide_mask):
                 self.is_staying = False
                 self.last_right = False
@@ -637,7 +602,6 @@ class Player(pg.sprite.Sprite):
                 else:
                     self.image = self.idle_left[self.idle_counter]
                 self.idle_counter = (self.idle_counter + 1) % 3
-                # print(self.idle_counter)
         self.is_staying = True
         self.mask = pg.mask.from_surface(self.image)
         
@@ -694,7 +658,7 @@ class Game:
             for x in range(len(level[y])):
                 if level[y][x] in ['l', 'm', 'r', 'R', 'L']:
                     Platform(level[y][x], x, y)
-                elif level[y][x] in ['G', 'g', 'B', 'x']:
+                elif level[y][x] in ['G', 'g', 'B', 'x', 'o']:
                     Object(x, y, level[y][x])
                 elif level[y][x] == '@':
                     # Player(x, y)
@@ -785,7 +749,6 @@ class Game:
 
         on_death.draw(screen)
         while True:
-            # print(iterations)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.terminate()
@@ -858,7 +821,6 @@ class Game:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     self.running = False
-                # if event.type == pg.KEYDOWN:
                 if event.type == pg.KEYDOWN:
                     if event.key == pg.K_ESCAPE:
                         self.pause()
@@ -882,7 +844,6 @@ class Game:
             if DEBUG:
                 without_drawing.draw(screen)
             player_group.draw(screen)
-            # print(player_group)
             pg.display.flip()
             screen.blit(back_ground, (0, 0))
 
