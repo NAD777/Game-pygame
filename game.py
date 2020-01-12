@@ -112,6 +112,7 @@ class Object(pg.sprite.Sprite):
             'g': trans(load_image('grass1.png', -1), width_platform, height_platform // 2, 0, 0),
             'G': trans(load_image('grass2.png', -1), width_platform, height_platform // 2, 0, 0),
             'B': trans(load_image('bush.png', -1), width_platform, height_platform, 0, 0),
+            'x': trans(load_image('big-crate.png'), width_platform, height_platform, 0, 0)
         }
         
         self.image = self.images[tile_type]
@@ -671,6 +672,8 @@ class Camera:
 class Game:
     def __init__(self):
         self.running = True
+        self.win_screen_was = False
+        self.timer_for_win = 0
         self.start()
 
     def load_level(self, filename):
@@ -691,7 +694,7 @@ class Game:
             for x in range(len(level[y])):
                 if level[y][x] in ['l', 'm', 'r', 'R', 'L']:
                     Platform(level[y][x], x, y)
-                elif level[y][x] in ['G', 'g', 'B']:
+                elif level[y][x] in ['G', 'g', 'B', 'x']:
                     Object(x, y, level[y][x])
                 elif level[y][x] == '@':
                     # Player(x, y)
@@ -794,6 +797,43 @@ class Game:
             pg.display.flip()
             clock.tick(FPS)
 
+    def win(self):
+        fon = pg.transform.scale(load_image('back.png', -1), (WIDTH, HEIGHT))
+
+        on_pause = pg.sprite.Group()
+
+        screen.blit(fon, (0, 0))
+
+        win = load_image('win.jpg', -1)
+
+        win = trans(win, win.get_width() // 4, win.get_height() // 4, 0, 0)
+
+        screen.blit(win, (WIDTH // 2 - win.get_width() // 2, 20))
+
+        cont = pg.sprite.Sprite(on_pause)
+        image = load_image("continue.png")
+        cont.image = trans(image, image.get_width() // 2, image.get_height() // 2, 0, 0)
+        cont.rect = cont.image.get_rect().move(WIDTH // 2 - cont.image.get_width() // 2, HEIGHT - cont.image.get_height() * 2 - 20)
+        
+        ext = pg.sprite.Sprite(on_pause)
+        image = load_image("exit.png")
+        ext.image = trans(image, image.get_width() // 2, image.get_height() // 2, 0, 0)
+        ext.rect = ext.image.get_rect().move(WIDTH // 2 - ext.image.get_width() // 2, HEIGHT - ext.image.get_height() - 10)
+
+        on_pause.draw(screen)
+
+        while True:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.terminate()
+                if event.type == pg.MOUSEBUTTONUP:
+                    if cont.rect.collidepoint(event.pos):
+                        return
+                    if ext.rect.collidepoint(event.pos):
+                        self.terminate()
+            pg.display.flip()
+            clock.tick(FPS)
+
     def terminate(self):
         pg.quit()
         exit()
@@ -808,6 +848,11 @@ class Game:
         screen.blit(back_ground, (0, 0))
         self.generate_level(self.load_level("map.txt"))
         while self.running:
+            if not enemy_group and not self.win_screen_was:
+                self.timer_for_win = (self.timer_for_win + 1) % 121
+                if self.timer_for_win == 120:
+                    self.win()
+                    self.win_screen_was = True
             if GAME_OVER:
                 self.game_over()
             for event in pg.event.get():
@@ -831,6 +876,7 @@ class Game:
             enemy_group.update(pressed)
             clock.tick(FPS)
             all_sprites.draw(screen)
+            enemy_group.draw(screen)
             hearts_group.draw(screen)
             dead_group.draw(screen)
             if DEBUG:
