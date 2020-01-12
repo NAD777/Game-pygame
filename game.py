@@ -5,7 +5,7 @@ from math import ceil
 from copy import copy
 
 
-DEGUG = 1
+DEGUG = 0
 
 horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
@@ -468,17 +468,17 @@ class Player(pg.sprite.Sprite):
 
         self.iteration_atack = 0
 
-        # self.down_sprite = pg.sprite.Sprite(without_drawing, player_down)
-        # self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 4, 5, 0, 0)
-        # self.down_sprite.image.fill((0, 0, 255))
-        # self.down_sprite.rect = self.down_sprite.image.get_rect().move(tile_width * pos_x + 45, tile_height * pos_y + self.image.get_height())
+        self.down_sprite = pg.sprite.Sprite(without_drawing, player_down)
+        self.down_sprite.image = trans(load_image("blank.png", -1), width_platform - 25, 10, 0, 0)
+        self.down_sprite.image.fill((0, 0, 255))
+        self.down_sprite.rect = self.down_sprite.image.get_rect().move(self.rect.x + width_platform - 10, self.rect.y + self.image.get_height() - 10)
 
     def set_speed(self, new_speed):
         self.speed = new_speed
 
     def update(self, *args):
         # ref
-        collide = pg.sprite.spritecollide(self, uppart_platforms_group, False, pg.sprite.collide_mask)
+        collide = pg.sprite.spritecollide(self.down_sprite, uppart_platforms_group, False, pg.sprite.collide_mask)
         # print(collide)
         # for el in collide:
             # print(el.rect.x, el.rect.y, el.rect.x + el.rect.width, el.rect.y + el.rect.height, 'our:', self.rect.x, self.rect.y)
@@ -518,15 +518,15 @@ class Player(pg.sprite.Sprite):
                             enemy.take_damage()
             else:
                 self.iteration_atack = 0
-                if collide_with_enemys:
-                    self.counter_for_take_damage += 1
-                    if self.counter_for_take_damage == 20 * (2 if self.several_damage_in_row else 1):
-                        self.several_damage_in_row = True
-                        self.hearts.take_damage()
-                        self.counter_for_take_damage = 0
-                else:
-                    self.several_damage_in_row = False
+            if collide_with_enemys:
+                self.counter_for_take_damage += 1
+                if self.counter_for_take_damage == 20 * (2 if self.several_damage_in_row else 1):
+                    self.several_damage_in_row = True
+                    self.hearts.take_damage()
                     self.counter_for_take_damage = 0
+            else:
+                self.several_damage_in_row = False
+                self.counter_for_take_damage = 0
             if args[0][pg.K_SPACE]:
                 if pg.sprite.spritecollide(self, downpart_platforms_group, False, pg.sprite.collide_mask):
                     self.jump_speed = 0
@@ -535,6 +535,8 @@ class Player(pg.sprite.Sprite):
                 self.rect = self.rect.move(0, -self.jump_speed)
                 self.jump_speed -= self.speed // 3
                 self.jump_speed = max(self.jump_speed, 0)
+            elif not collide:
+                self.jump_speed = 0
 
             if args[0][pg.K_DOWN] and self.iteration % 5 == 0:
                 # if args[0][pg.K_SPACE]:
@@ -577,6 +579,7 @@ class Player(pg.sprite.Sprite):
         self.is_staying = True
         self.mask = pg.mask.from_surface(self.image)
         self.iteration = (self.iteration + 1) % 40
+        self.down_sprite.rect = self.down_sprite.image.get_rect().move(self.rect.x + width_platform - 10, self.rect.y + self.image.get_height() - 10)
 
 
 class Camera:
@@ -584,12 +587,16 @@ class Camera:
     def __init__(self):
         self.dx = 0
         self.dy = 0
+        self.first_it = False
 
     # сдвинуть объект obj на смещение камеры
     def apply(self, obj, tp=None):
 
         if tp == "under_player":
-            obj.rect.x -= self.dx
+            if self.first_it:
+                self.first_it = True
+            else:
+                obj.rect.x -= self.dx
             # obj.rect.y -= self.dy
         else:
             obj.rect.x += self.dx
@@ -685,8 +692,6 @@ class Game:
                 self.camera.apply(sprite)
             for sprite in without_drawing:
                 self.camera.apply(sprite)
-            for sprite in player_down:
-                self.camera.apply(sprite, 'under_player')
             for sprite in dead_group:
                 self.camera.apply(sprite)
             hearts_group.update()
