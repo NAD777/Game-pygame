@@ -65,7 +65,7 @@ def load_image(name, color_key=None, x=0, y=0):
 
 
 def trans(img, width, height, by_x, by_y):
-    return pg.transform.flip(pg.transform.scale(img, (width, height)), by_x, by_y)
+    return pg.transform.flip(pg.transform.scale(img, (width if width != -1 else img.get_width(), height)), by_x, by_y)
 
 
 def any_colide_mask(first, group):
@@ -98,10 +98,6 @@ class Border(pg.sprite.Sprite):
 width_platform = ceil(WIDTH // 16)
 height_platform = ceil(HEIGHT // 9)
 
-tile_images = {
-    'box': trans(load_image('box.png'), width_platform, height_platform, 0, 0),
-    'grass': trans(load_image('box.png'), width_platform, height_platform, 0, 0)
-}
 platform_images = {
     'l': trans(load_image('platform1.png', -1, 1), width_platform, height_platform, 0, 0),
     'm': trans(load_image('platform2.png'), width_platform, height_platform, 0, 0),
@@ -109,10 +105,17 @@ platform_images = {
 }
 
 
-class Part(pg.sprite.Sprite):
-    def __init__(self, x, y, width, height):
-        super().__init__()
-        self.image = trans(load_image("blank.png", -1), width, height, 0, 0)
+class Object(pg.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, tile_type):
+        super().__init__(all_sprites)
+        self.images = {
+            'g': trans(load_image('grass1.png', -1), width_platform, height_platform // 2, 0, 0),
+            'G': trans(load_image('grass2.png', -1), width_platform, height_platform // 2, 0, 0),
+            'B': trans(load_image('bush.png', -1), width_platform, height_platform, 0, 0),
+        }
+        
+        self.image = self.images[tile_type]
+        self.rect = self.image.get_rect().move(width_platform * pos_x, height_platform * (pos_y + 1) - self.image.get_height())
 
 
 class Platform(pg.sprite.Sprite):
@@ -688,6 +691,8 @@ class Game:
             for x in range(len(level[y])):
                 if level[y][x] in ['l', 'm', 'r', 'R', 'L']:
                     Platform(level[y][x], x, y)
+                elif level[y][x] in ['G', 'g', 'B']:
+                    Object(x, y, level[y][x])
                 elif level[y][x] == '@':
                     # Player(x, y)
                     self.player = Player(x, y)
