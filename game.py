@@ -5,7 +5,7 @@ from math import ceil
 from copy import copy
 
 
-DEGUG = 0
+DEBUG = 0
 
 horizontal_borders = pg.sprite.Group()
 vertical_borders = pg.sprite.Group()
@@ -700,7 +700,7 @@ class Game:
             all_sprites.draw(screen)
             hearts_group.draw(screen)
             dead_group.draw(screen)
-            if DEGUG:
+            if DEBUG:
                 without_drawing.draw(screen)
             player_group.draw(screen)
             # print(player_group)
