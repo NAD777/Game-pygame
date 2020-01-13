@@ -149,7 +149,7 @@ class Coin(pg.sprite.Sprite):
         self.pos_y = pos_y
 
         self.image = self.images[0]
-        self.rect = self.image.get_rect().move(width_platform * pos_x - self.image.get_width() // 2, height_platform * pos_y)
+        self.rect = self.image.get_rect().move(width_platform * pos_x + width_platform // 2 - self.image.get_width() // 2, height_platform * pos_y)
         self.mask = pg.mask.from_surface(self.image)
 
         self.cur_frame = 0
