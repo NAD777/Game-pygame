@@ -1,10 +1,52 @@
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QListWidgetItem, QFormLayout, QVBoxLayout, QLabel
+from PyQt5 import QtGui
 import sys
 import json
+import os
+
+
+class Map(QWidget):
+    def __init__(self, text):
+        super().__init__()
+        uic.loadUi('item.ui', self)
+
+        self.setLayout(self.gridLayout)
+
+        self.label.setText(text)
+    
+    def mousePressEvent(self, event):
+        self.label.setStyleSheet("""
+            background-color: rgb(213, 224, 252); 
+            padding:5px;
+            border-radius: 8px;
+        """)
 
 
 class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        uic.loadUi('main.ui', self)
+        
+        self.scrollLayout = QFormLayout()
+        self.scrollWidget = QWidget()
+        self.scrollWidget.setLayout(self.scrollLayout)
+
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setWidget(self.scrollWidget)
+
+        self.add_btn.clicked.connect(self.add_part)
+
+        for filename in os.listdir("maps"):
+            self.add_part(Map(filename))
+        # self.add_part()
+
+    def add_part(self, widget):
+        self.scrollLayout.addWidget(widget)
+    
+
+
+class Settings(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('main_window.ui', self)

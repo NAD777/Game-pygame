@@ -31,6 +31,8 @@ dead_group = pg.sprite.Group()
 
 draw_on_screen = pg.sprite.Group()
 
+coins_group = pg.sprite.Group()
+
 pg.init()
 
 cfg = open("cfg.json", "r")
@@ -65,7 +67,7 @@ def load_image(name, color_key=None, x=0, y=0):
 
 
 def trans(img, width, height, by_x, by_y):
-    return pg.transform.flip(pg.transform.scale(img, (width if width != -1 else img.get_width(), height)), by_x, by_y)
+    return pg.transform.flip(pg.transform.scale(img, (width if width != -1 else img.get_width(), height if height != -1 else img.get_height())), by_x, by_y)
 
 
 def any_colide_mask(first, group):
@@ -103,6 +105,65 @@ platform_images = {
 }
 
 
+class Score():
+    def __init__(self):
+        self.text = "0000000000"
+        self.print()
+
+    def print(self):    
+        font = pg.font.Font(None, 30)
+        font.set_bold(True)
+        text_coord = 5
+        
+        string_rendered = font.render(self.text, 1, (34, 139, 34))
+        text_rect = string_rendered.get_rect()
+        text_coord += 10
+        text_rect.top = text_coord
+        text_rect.x = WIDTH - text_rect.width - 15
+        screen.blit(string_rendered, text_rect)
+    
+    def add_score(self, add):
+        self.text = str(int(self.text) + add).rjust(10, '0')
+        self.print()
+    
+    def add_coin(self, x, y):
+        Coin(x, y, self)
+
+
+class Coin(pg.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, score):
+        super().__init__(all_sprites, coins_group)
+        self.score = score
+        self.images = {
+            0: trans(load_image('coin/coin_01.png', -1), -1, -1, 0, 0),
+            1: trans(load_image('coin/coin_02.png', -1), -1, -1, 0, 0),
+            2: trans(load_image('coin/coin_03.png', -1), -1, -1, 0, 0),
+            3: trans(load_image('coin/coin_04.png', -1), -1, -1, 0, 0),
+            4: trans(load_image('coin/coin_05.png', -1), -1, -1, 0, 0),
+            5: trans(load_image('coin/coin_06.png', -1), -1, -1, 0, 0),
+            6: trans(load_image('coin/coin_07.png', -1), -1, -1, 0, 0),
+            7: trans(load_image('coin/coin_08.png', -1), -1, -1, 0, 0)
+        }
+
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+
+        self.image = self.images[0]
+        self.rect = self.image.get_rect().move(width_platform * pos_x - self.image.get_width() // 2, height_platform * pos_y)
+        self.mask = pg.mask.from_surface(self.image)
+
+        self.cur_frame = 0
+        self.period = 10
+
+    def update(self):
+        self.mask = pg.mask.from_surface(self.image)
+        self.cur_frame = (self.cur_frame + 1) % (len(self.images) * self.period)
+        self.image = self.images[self.cur_frame // self.period]
+        if pg.sprite.spritecollide(self, player_group, False, pg.sprite.collide_mask):
+            self.kill()
+            self.score.add_score(100)
+
+
 class Object(pg.sprite.Sprite):
     def __init__(self, pos_x, pos_y, tile_type):
         super().__init__(all_sprites)
@@ -111,7 +172,7 @@ class Object(pg.sprite.Sprite):
             'G': trans(load_image('grass2.png', -1), width_platform, height_platform // 2, 0, 0),
             'B': trans(load_image('bush.png', -1), width_platform, height_platform, 0, 0),
             'x': trans(load_image('big-crate.png'), width_platform, height_platform, 0, 0),
-            'o': trans(load_image('rock.png', -1), width_platform, height_platform // 2, 0, 0),
+            'o': trans(load_image('rock.png', -1), width_platform, height_platform // 2, 0, 0)
         }
         
         self.image = self.images[tile_type]
@@ -154,8 +215,9 @@ class Platform(pg.sprite.Sprite):
 
 
 class Skelet(pg.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, score):
         super().__init__(all_sprites, enemy_group)
+        self.score = score
         img = load_image("Skeleton Walk.png", -1)
         h = 111
         img = trans(img, 858, h, 0, 0)
@@ -246,6 +308,7 @@ class Skelet(pg.sprite.Sprite):
 
             if self.dead_counter == len(self.death_right):
                 self.kill()
+                self.score.add_score(200)
                 self.add(dead_group)
             return
 
@@ -652,7 +715,7 @@ class Game:
         # дополняем каждую строку пустыми клетками ('.')
         return list(map(lambda x: x.ljust(self.max_width, '.'), level_map))
 
-    def generate_level(self, level):
+    def generate_level(self, level, score):
         # new_player, x, y = None, None, None
         for y in range(len(level)):
             for x in range(len(level[y])):
@@ -660,13 +723,15 @@ class Game:
                     Platform(level[y][x], x, y)
                 elif level[y][x] in ['G', 'g', 'B', 'x', 'o']:
                     Object(x, y, level[y][x])
+                elif level[y][x] == 'C':
+                    score.add_coin(x, y)
                 elif level[y][x] == '@':
                     # Player(x, y)
                     self.player = Player(x, y)
                     self.player_x = x
                     self.player_y = y
                 elif level[y][x] == 'E':
-                    Skelet(x, y)
+                    Skelet(x, y, score)
     # вернем игрока, а также размер поля в клетках
         # return new_player, x, y
 
@@ -807,9 +872,10 @@ class Game:
 
     def game(self):
         self.camera = Camera()
+        self.score = Score()
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
-        self.generate_level(self.load_level("map.txt"))
+        self.generate_level(self.load_level("map.txt"), self.score)
         while self.running:
             if not enemy_group and not self.win_screen_was:
                 self.timer_for_win = (self.timer_for_win + 1) % 121
@@ -834,6 +900,7 @@ class Game:
                 self.camera.apply(sprite)
             for sprite in dead_group:
                 self.camera.apply(sprite)
+            coins_group.update()
             hearts_group.update()
             enemy_group.update(pressed)
             clock.tick(FPS)
@@ -841,6 +908,7 @@ class Game:
             enemy_group.draw(screen)
             hearts_group.draw(screen)
             dead_group.draw(screen)
+            self.score.print()
             if DEBUG:
                 without_drawing.draw(screen)
             player_group.draw(screen)
