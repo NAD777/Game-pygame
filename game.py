@@ -3,6 +3,7 @@ import json
 import os
 from math import ceil
 from copy import copy
+from sys import argv
 
 
 DEBUG = 0
@@ -320,6 +321,7 @@ class Skelet(pg.sprite.Sprite):
             self.right = False
         if not pg.sprite.spritecollide(self.down_sprite, platforms_group, False):
             self.move_all(0, 4)
+            return
         else:
             if not self.attack:
                 self.move_all(self.speed if self.right else -self.speed, 0)
@@ -704,7 +706,7 @@ class Game:
         self.start()
 
     def load_level(self, filename):
-        filename = "data/" + filename
+        filename = "data/maps/" + filename
         # читаем уровень, убирая символы перевода строки
         with open(filename, 'r') as mapFile:
             level_map = [line.strip() for line in mapFile]
@@ -875,7 +877,7 @@ class Game:
         self.score = Score()
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
-        self.generate_level(self.load_level("map.txt"), self.score)
+        self.generate_level(self.load_level(argv[1] if len(argv) > 1 else "map.txt"), self.score)
         while self.running:
             if not enemy_group and not self.win_screen_was:
                 self.timer_for_win = (self.timer_for_win + 1) % 121

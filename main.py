@@ -4,6 +4,7 @@ from PyQt5 import QtGui
 import sys
 import json
 import os
+from subprocess import Popen
 
 
 class Map(QWidget):
@@ -12,22 +13,56 @@ class Map(QWidget):
         uic.loadUi('item.ui', self)
 
         self.setLayout(self.gridLayout)
-
+        self.level_name = text
+        text = text[:-4]
         self.label.setText(text)
+        
+        self.start_btn.clicked.connect(self.game_start)
     
-    def mousePressEvent(self, event):
-        self.label.setStyleSheet("""
-            background-color: rgb(213, 224, 252); 
-            padding:5px;
-            border-radius: 8px;
-        """)
+    def game_start(self):
+        Popen(["python", 'game.py', self.level_name])
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('main.ui', self)
+        self.cur_layout = None
+        self.open_levels()
+
+        self.settings_btn.clicked.connect(self.open_settigns)
+        self.cup.clicked.connect(self.open_table)
+
+        self.back_btn.hide()
+    
+    def open(self, cls):
+        self.cur_layout = cls
+        self.clearLayout(self.horizontalLayout)
+        self.horizontalLayout.addWidget(self.cur_layout)
+
+    def open_settigns(self):
+        self.open(Settings(self))
+    
+    def open_table(self):
+        self.open(Table(self))
+
+    def open_levels(self):
+        self.open(Levels(self))
+    
+    def clearLayout(self, layout):
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
         
+    
+class List(QWidget):
+    def __init__(self, parent):
+        super().__init__()
+        uic.loadUi('List.ui', self)
+
+        self.setLayout(self.gridLayout)
+
         self.scrollLayout = QFormLayout()
         self.scrollWidget = QWidget()
         self.scrollWidget.setLayout(self.scrollLayout)
@@ -35,33 +70,79 @@ class MainWindow(QMainWindow):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setWidget(self.scrollWidget)
 
-        self.add_btn.clicked.connect(self.add_part)
-
-        for filename in os.listdir("maps"):
-            self.add_part(Map(filename))
-        # self.add_part()
+        self.parent = parent
 
     def add_part(self, widget):
         self.scrollLayout.addWidget(widget)
+
+
+class Levels(List):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent.settings_btn.show()
+        self.parent.cup.show()
+        self.parent.back_btn.hide()
+        for filename in sorted(os.listdir("data/maps")):
+            self.add_part(Map(filename))
+
+
+class Part_table(QWidget):
+    def __init__(self, place):
+        super().__init__()
+        uic.loadUi('table_part.ui', self)
+        color_bg = "rgb(213, 224, 252)"
+        color_text = "rgb(213, 224, 252)"
+        if place == 0:
+            color_bg = "rgb(213, 224, 252)"
+            color_text = "rgb(213, 224, 252)"
+        elif place == 1:
+            color_bg = "rgb(213, 224, 252)"
+            color_text = "rgb(213, 224, 252)"
+        elif place == 2:
+            color_bg = "rgb(213, 224, 252)"
+            color_text = "rgb(213, 224, 252)"
+        
+        self.nickname.setStyleSheet(f""""
+            padding:5px;
+            background-color: rgb(213, 224, 252);
+            color: rgb(213, 224, 252);""")
+
+        self.setLayout(self.gridLayout)
+
+
+class Table(List):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent.settings_btn.hide()
+        self.parent.cup.hide()
+        self.parent.back_btn.show()
+        self.parent.back_btn.clicked.connect(self.back)
+        for place in range(4):
+            self.add_part(Part_table(place))
     
+    def back(self):
+        self.parent.open_levels()
 
 
 class Settings(QMainWindow):
-    def __init__(self):
+    def __init__(self, parent):
         super().__init__()
-        uic.loadUi('main_window.ui', self)
-        self.exit_btn.clicked.connect(self.exit_event)
-        self.start_btn.clicked.connect(self.start_event)
+        uic.loadUi('Settings.ui', self)
 
         self.all_cfg = open("list.json", "r")
         self.cfg = open("cfg.json", "r")
 
+        self.parent = parent
+
+        self.parent.settings_btn.hide()
+        self.parent.cup.hide()
+
+        self.parent.back_btn.show()
+        self.parent.back_btn.clicked.connect(self.set_event)
+
         self.add_items()
 
-    def exit_event(self):
-        sys.exit()
-
-    def start_event(self):
+    def set_event(self):
         cfg = open("cfg.json", "r")
         data = json.load(cfg)
         cfg.close()
@@ -73,6 +154,7 @@ class Settings(QMainWindow):
         json.dump(data, cfg_write, indent=4, sort_keys=True)
         cfg_write.close()
         self.all_cfg.close()
+        self.parent.open_levels()
 
     def add_items(self):
         data = json.load(self.all_cfg)
