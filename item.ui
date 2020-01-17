@@ -40,14 +40,7 @@ background-color: rgb(213, 224, 252); </string>
       </property>
      </widget>
     </item>
-    <item row="1" column="2">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
+    <item row="2" column="3">
      <widget class="QPushButton" name="start_btn">
       <property name="styleSheet">
        <string notr="true">border:none;</string>
@@ -67,10 +60,23 @@ background-color: rgb(213, 224, 252); </string>
       </property>
      </widget>
     </item>
-    <item row="3" column="2">
-     <widget class="QLabel" name="label_2">
+    <item row="2" column="2">
+     <widget class="QPushButton" name="cup">
+      <property name="styleSheet">
+       <string notr="true">border:none;</string>
+      </property>
       <property name="text">
        <string/>
+      </property>
+      <property name="icon">
+       <iconset>
+        <normaloff>data/menu/trophy.png</normaloff>data/menu/trophy.png</iconset>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>56</width>
+        <height>45</height>
+       </size>
       </property>
      </widget>
     </item>

@@ -20,7 +20,9 @@ class Map(QWidget):
         self.start_btn.clicked.connect(self.game_start)
     
     def game_start(self):
-        Popen(["python", 'game.py', self.level_name])
+        cfg = open("cfg.json", "r")
+        data = json.load(cfg)
+        Popen(["python", 'game.py', self.level_name, data['name']])
 
 
 class MainWindow(QMainWindow):
@@ -31,7 +33,7 @@ class MainWindow(QMainWindow):
         self.open_levels()
 
         self.settings_btn.clicked.connect(self.open_settigns)
-        self.cup.clicked.connect(self.open_table)
+        # self.cup.clicked.connect(self.open_table)
 
         self.back_btn.hide()
     
@@ -80,7 +82,7 @@ class Levels(List):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent.settings_btn.show()
-        self.parent.cup.show()
+        # self.parent.cup.show()
         self.parent.back_btn.hide()
         for filename in sorted(os.listdir("data/maps")):
             self.add_part(Map(filename))
@@ -114,7 +116,7 @@ class Table(List):
         self.parent.cup.hide()
         self.parent.back_btn.show()
         self.parent.back_btn.clicked.connect(self.back)
-        
+
         for place in range(5):
             self.add_part(Part_table(place))
     
@@ -133,7 +135,7 @@ class Settings(QMainWindow):
         self.parent = parent
 
         self.parent.settings_btn.hide()
-        self.parent.cup.hide()
+        # self.parent.cup.hide()
 
         self.parent.back_btn.show()
         self.parent.back_btn.clicked.connect(self.set_event)
@@ -146,6 +148,7 @@ class Settings(QMainWindow):
         cfg.close()
 
         data['fps'] = self.fps.currentText()
+        data['name'] = self.lineEdit.text()
 
         print(data)
         cfg_write = open("cfg.json", "w")
@@ -167,6 +170,8 @@ class Settings(QMainWindow):
             
         except ValueError:
             self.fps.addItems(data['fps'])
+
+        self.lineEdit.setText(cfg["name"])
 
 
 if __name__ == "__main__":

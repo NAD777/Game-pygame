@@ -129,6 +129,9 @@ class Score():
     
     def add_coin(self, x, y):
         Coin(x, y, self)
+    
+    def get_score(self):
+        return int(self.text)
 
 
 class Coin(pg.sprite.Sprite):
@@ -827,7 +830,24 @@ class Game:
             pg.display.flip()
             clock.tick(FPS)
 
+    def write_score(self):
+        try:
+            cfg = open(f"{self.level_name[:-4]}_stats.json", "r")
+            data = json.load(cfg)
+            
+            cfg.close()
+            data.append((self.name, self.score.get_score()))
+            data = sorted(data, key=lambda x: x[1], reverse=True)[:5]
+            cfg = open(f"{self.level_name[:-4]}_stats.json", "w")
+            json.dump(data, cfg, sort_keys=True)
+            
+        except FileNotFoundError:
+            cfg = open(f"{self.level_name[:-4]}_stats.json", "w")
+            json.dump([(self.name, self.score.get_score())], cfg, sort_keys=True)
+        # data = json.load(cfg)
+
     def win(self):
+        self.write_score()
         fon = pg.transform.scale(load_image('back.png', -1), (WIDTH, HEIGHT))
 
         on_pause = pg.sprite.Group()
@@ -877,7 +897,10 @@ class Game:
         self.score = Score()
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
-        self.generate_level(self.load_level(argv[1] if len(argv) > 1 else "map.txt"), self.score)
+        self.level_name = argv[1]
+        self.name = argv[2]
+        self.generate_level(self.load_level(self.level_name if len(argv) > 1 else "map.txt"), self.score)
+        self.write_score()
         while self.running:
             if not enemy_group and not self.win_screen_was:
                 self.timer_for_win = (self.timer_for_win + 1) % 121
