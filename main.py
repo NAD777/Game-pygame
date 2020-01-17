@@ -91,21 +91,18 @@ class Part_table(QWidget):
         super().__init__()
         uic.loadUi('table_part.ui', self)
         color_bg = "rgb(213, 224, 252)"
-        color_text = "rgb(213, 224, 252)"
+        color_text = "rgb(0, 0, 0)"
         if place == 0:
-            color_bg = "rgb(213, 224, 252)"
-            color_text = "rgb(213, 224, 252)"
+            color_bg = "rgb(255, 77, 0)"
+            color_text = "rgb(0, 0, 0)"
         elif place == 1:
-            color_bg = "rgb(213, 224, 252)"
-            color_text = "rgb(213, 224, 252)"
+            color_bg = "rgb(255, 117, 24)"
+            color_text = "rgb(0, 0, 0)"
         elif place == 2:
-            color_bg = "rgb(213, 224, 252)"
-            color_text = "rgb(213, 224, 252)"
+            color_bg = "rgb(119, 221, 119)"
+            color_text = "rgb(0, 0, 0)"
         
-        self.nickname.setStyleSheet(f""""
-            padding:5px;
-            background-color: rgb(213, 224, 252);
-            color: rgb(213, 224, 252);""")
+        self.nickname.setStyleSheet(f"padding:5px;background-color: {color_bg};color: {color_text}")
 
         self.setLayout(self.gridLayout)
 
@@ -117,7 +114,8 @@ class Table(List):
         self.parent.cup.hide()
         self.parent.back_btn.show()
         self.parent.back_btn.clicked.connect(self.back)
-        for place in range(4):
+        
+        for place in range(5):
             self.add_part(Part_table(place))
     
     def back(self):
