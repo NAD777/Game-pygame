@@ -4,6 +4,7 @@ import os
 from math import ceil
 from copy import copy
 from sys import argv
+from time import time
 
 
 DEBUG = 0
@@ -106,7 +107,7 @@ platform_images = {
 }
 
 
-class Score():
+class Score:
     def __init__(self):
         self.text = "0000000000"
         self.print()
@@ -391,6 +392,9 @@ class Heart(pg.sprite.Sprite):
         self.die = False
         self.after_death_iterations_counter = 0
 
+    def get_hearts(self):
+        return self.col
+
     def is_dead(self):
         return self.die
 
@@ -562,6 +566,9 @@ class Player(pg.sprite.Sprite):
         self.down_sprite.rect = self.down_sprite.image.get_rect().move(self.rect.x + width_platform - 10, self.rect.y + self.image.get_height() - 5)
 
         self.add_dead_group = False
+    
+    def get_hearts(self):
+        return self.hearts.get_hearts()
 
     def set_speed(self, new_speed):
         self.speed = new_speed
@@ -739,32 +746,6 @@ class Game:
                     Skelet(x, y, score)
     # вернем игрока, а также размер поля в клетках
         # return new_player, x, y
-
-    def start_screen(self):
-        intro_text = ["ЗАСТАВКА", "",
-                    "Нажмите кнопку мыши для начала!"]
-
-        fon = pg.transform.scale(load_image('back.png'), (WIDTH, HEIGHT))
-        screen.blit(fon, (0, 0))
-        font = pg.font.Font(None, 30)
-        text_coord = 50
-        for line in intro_text:
-            string_rendered = font.render(line, 1, pg.Color('black'))
-            intro_rect = string_rendered.get_rect()
-            text_coord += 10
-            intro_rect.top = text_coord
-            intro_rect.x = 10
-            text_coord += intro_rect.height
-            screen.blit(string_rendered, intro_rect)
-
-        while True:
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    self.terminate()
-                elif event.type == pg.KEYDOWN or event.type == pg.MOUSEBUTTONDOWN:
-                    return  # начинаем игру
-            pg.display.flip()
-            clock.tick(FPS)
     
     def pause(self):
         fon = pg.transform.scale(load_image('back.png', -1), (WIDTH, HEIGHT))
@@ -827,26 +808,38 @@ class Game:
                 if event.type == pg.MOUSEBUTTONUP:
                     if ext.rect.collidepoint(event.pos):
                         self.terminate()
+            
             pg.display.flip()
             clock.tick(FPS)
 
     def write_score(self):
         try:
-            cfg = open(f"{self.level_name[:-4]}_stats.json", "r")
-            data = json.load(cfg)
+            stats = open("stats.json", "r")
+            data = json.load(stats)
             
-            cfg.close()
-            data.append((self.name, self.score.get_score()))
-            data = sorted(data, key=lambda x: x[1], reverse=True)[:5]
-            cfg = open(f"{self.level_name[:-4]}_stats.json", "w")
-            json.dump(data, cfg, sort_keys=True)
+            stats.close()
+            if self.level_name in data:
+                data[self.level_name].append((self.name, self.score.get_score()))
+                data[self.level_name] = sorted(data[self.level_name], key=lambda x: x[1], reverse=True)[:5]
+            else:
+                data[self.level_name] = [(self.name, self.score.get_score())]
+            stats = open("stats.json", "w")
+            json.dump(data, stats, indent=4, sort_keys=True)
             
         except FileNotFoundError:
-            cfg = open(f"{self.level_name[:-4]}_stats.json", "w")
-            json.dump([(self.name, self.score.get_score())], cfg, sort_keys=True)
+            stats = open("stats.json", "w")
+            data = dict()
+            data[self.level_name] = [(self.name, self.score.get_score())]
+            json.dump(data, stats, indent=4, sort_keys=True)
+        stats.close()
         # data = json.load(cfg)
 
     def win(self):
+        # get time from game begin in sec
+        self.score.add_score(1000 // ceil(time() - self.time_start))
+        # add col hearts * 50 points to score
+        self.score.add_score(50 * self.player.get_hearts())
+
         self.write_score()
         fon = pg.transform.scale(load_image('back.png', -1), (WIDTH, HEIGHT))
 
@@ -871,7 +864,7 @@ class Game:
         ext.rect = ext.image.get_rect().move(WIDTH // 2 - ext.image.get_width() // 2, HEIGHT - ext.image.get_height() - 10)
 
         on_pause.draw(screen)
-
+        self.score.print()
         while True:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -881,6 +874,7 @@ class Game:
                         return
                     if ext.rect.collidepoint(event.pos):
                         self.terminate()
+            
             pg.display.flip()
             clock.tick(FPS)
 
@@ -895,12 +889,13 @@ class Game:
     def game(self):
         self.camera = Camera()
         self.score = Score()
+        self.time_start = time()
         back_ground = trans(load_image("back.png"), WIDTH, HEIGHT, 0, 0)
         screen.blit(back_ground, (0, 0))
         self.level_name = argv[1]
         self.name = argv[2]
         self.generate_level(self.load_level(self.level_name if len(argv) > 1 else "map.txt"), self.score)
-        self.write_score()
+        # self.write_score()
         while self.running:
             if not enemy_group and not self.win_screen_was:
                 self.timer_for_win = (self.timer_for_win + 1) % 121

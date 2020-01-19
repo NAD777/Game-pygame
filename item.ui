@@ -61,7 +61,7 @@ background-color: rgb(213, 224, 252); </string>
      </widget>
     </item>
     <item row="2" column="2">
-     <widget class="QPushButton" name="cup">
+     <widget class="QPushButton" name="cup_btn">
       <property name="styleSheet">
        <string notr="true">border:none;</string>
       </property>

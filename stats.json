@@ -1,0 +1,40 @@
+{
+    "map.txt": [
+        [
+            "Player",
+            0
+        ],
+        [
+            "Player",
+            0
+        ]
+    ],
+    "map1.txt": [
+        [
+            "Player",
+            0
+        ]
+    ],
+    "map2.txt": [
+        [
+            "Andrey",
+            742
+        ],
+        [
+            "Andrey",
+            600
+        ],
+        [
+            "Andrey",
+            542
+        ],
+        [
+            "Andrey",
+            542
+        ],
+        [
+            "Player",
+            500
+        ]
+    ]
+}
