@@ -59,6 +59,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('main.ui', self)
+        self.setWindowTitle("Platformer")
         self.cur_layout = None
         self.open_levels()
 

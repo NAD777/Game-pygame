@@ -264,7 +264,6 @@ class Skelet(pg.sprite.Sprite):
         self.attack_counter = 0
 
         self.right = right
-        print(self.right)
 
         self.attack = False
 
@@ -290,7 +289,6 @@ class Skelet(pg.sprite.Sprite):
 
     def take_damage(self):
         self.dead = True
-        # print("DEAD SKELET")
 
     def cut_sheet(self, sheet, columns, rows, reverse=0):
         frames = []
@@ -420,7 +418,6 @@ class Heart(pg.sprite.Sprite):
             self.hearts = [trans(load_image(f'death/death{i}.png', -1), 2 * 64, 2 * 16, 0, 0) for i in range(1, 3)]
             self.mod = 2
             self.die = True
-            print("DEATH!")
 
     def update(self):
         if self.die:
@@ -429,7 +426,6 @@ class Heart(pg.sprite.Sprite):
                 global GAME_OVER
                 GAME_OVER = True
         self.iteration = (self.iteration + 1) % 40
-        # print(self.col_blinks)
         if self.damage_just_taken and self.iteration % 5 == 0:
             if self.col_blinks != 8:
                 self.counter = self.counter % self.mod
@@ -606,13 +602,10 @@ class Player(pg.sprite.Sprite):
 
         collide_with_enemys = pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)
         if args:
-            # if args[0][pg.K_g] and self.iteration % 5 == 0:
-            #     self.hearts.take_damage()
 
             self.mask = pg.mask.from_surface(self.image)
             if args[0][pg.K_f]:
                 self.iteration_attack = (self.iteration_attack + 1) % 10
-                # print(self.attack_counter)
                 if self.iteration % 3 == 0:
                     if self.last_right:
                         self.image = self.attack_right[self.attack_counter]
