@@ -113,6 +113,7 @@ class Levels(List):
         super().__init__(parent)
         self.parent.settings_btn.show()
         # self.parent.cup.show()
+        self.parent.label.setText("Platformer")
         self.parent.back_btn.hide()
         for filename in sorted(os.listdir("data/maps")):
             self.add_part(Map(filename, parent))
@@ -121,6 +122,7 @@ class Levels(List):
 class Table(List):
     def __init__(self, level_name, parent):
         super().__init__(parent)
+        self.parent.label.setText(f"Stats {level_name[:-4]}")
         self.parent.settings_btn.hide()
         self.parent.back_btn.show()
         self.parent.back_btn.clicked.connect(self.back)
@@ -131,7 +133,10 @@ class Table(List):
     
     def load_data(self):
         with open("stats.json") as stats:
-            data = json.load(stats)[self.level_name]
+            try:
+                data = json.load(stats)[self.level_name]
+            except KeyError:
+                data = []
             return data
     
     def back(self):
@@ -141,13 +146,14 @@ class Table(List):
 class Settings(QMainWindow):
     def __init__(self, parent):
         super().__init__()
+        
         uic.loadUi('Settings.ui', self)
 
         self.all_cfg = open("list.json", "r")
         self.cfg = open("cfg.json", "r")
 
         self.parent = parent
-
+        self.parent.label.setText(f"Settings")
         self.parent.settings_btn.hide()
 
         self.parent.back_btn.show()

@@ -220,7 +220,7 @@ class Platform(pg.sprite.Sprite):
 
 
 class Skelet(pg.sprite.Sprite):
-    def __init__(self, x, y, score):
+    def __init__(self, x, y, score, right):
         super().__init__(all_sprites, enemy_group)
         self.score = score
         img = load_image("Skeleton Walk.png", -1)
@@ -263,7 +263,8 @@ class Skelet(pg.sprite.Sprite):
 
         self.attack_counter = 0
 
-        self.right = False
+        self.right = right
+        print(self.right)
 
         self.attack = False
 
@@ -319,11 +320,13 @@ class Skelet(pg.sprite.Sprite):
 
         left_part_collide = pg.sprite.spritecollide(self.left_down_sprite, uppart_platforms_group, False)
         right_part_collide = pg.sprite.spritecollide(self.right_down_sprite, uppart_platforms_group, False)
-        if not left_part_collide:
-            self.right = True
-        elif not right_part_collide:
-            self.right = False
-        if not pg.sprite.spritecollide(self.down_sprite, platforms_group, False):
+        collide_with_platform = pg.sprite.spritecollide(self.down_sprite, platforms_group, False)
+        if collide_with_platform:
+            if not left_part_collide:
+                self.right = True
+            elif not right_part_collide:
+                self.right = False
+        if not collide_with_platform:
             self.move_all(0, 4)
             return
         else:
@@ -603,8 +606,8 @@ class Player(pg.sprite.Sprite):
 
         collide_with_enemys = pg.sprite.spritecollide(self, enemy_group, False, pg.sprite.collide_mask)
         if args:
-            if args[0][pg.K_g] and self.iteration % 5 == 0:
-                self.hearts.take_damage()
+            # if args[0][pg.K_g] and self.iteration % 5 == 0:
+            #     self.hearts.take_damage()
 
             self.mask = pg.mask.from_surface(self.image)
             if args[0][pg.K_f]:
@@ -743,7 +746,9 @@ class Game:
                     self.player_x = x
                     self.player_y = y
                 elif level[y][x] == 'E':
-                    Skelet(x, y, score)
+                    Skelet(x, y, score, True)
+                elif level[y][x] == "e":
+                    Skelet(x, y, score, False)
     # вернем игрока, а также размер поля в клетках
         # return new_player, x, y
     

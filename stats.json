@@ -1,5 +1,5 @@
 {
-    "map.txt": [
+    "First.txt": [
         [
             "Player",
             0
@@ -9,13 +9,13 @@
             0
         ]
     ],
-    "map1.txt": [
+    "Second.txt": [
         [
             "Player",
             0
         ]
     ],
-    "map2.txt": [
+    "Third.txt": [
         [
             "Andrey",
             742
