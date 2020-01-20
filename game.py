@@ -37,12 +37,8 @@ coins_group = pg.sprite.Group()
 
 pg.init()
 
-cfg = open("cfg.json", "r")
-data = json.load(cfg)
-cfg.close()
-
 SIZE = WIDTH, HEIGHT = 960, 540
-FPS = int(data['fps'])
+FPS = 60
 
 screen = pg.display.set_mode(SIZE)
 screen.fill((0, 0, 0))

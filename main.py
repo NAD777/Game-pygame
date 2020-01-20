@@ -150,7 +150,6 @@ class Settings(QMainWindow):
         
         uic.loadUi('Settings.ui', self)
 
-        self.all_cfg = open("list.json", "r")
         self.cfg = open("cfg.json", "r")
 
         self.parent = parent
@@ -167,27 +166,15 @@ class Settings(QMainWindow):
         data = json.load(cfg)
         cfg.close()
 
-        data['fps'] = self.fps.currentText()
         data['name'] = self.lineEdit.text()
 
         cfg_write = open("cfg.json", "w")
         json.dump(data, cfg_write, indent=4, sort_keys=True)
         cfg_write.close()
-        self.all_cfg.close()
         self.parent.open_levels()
 
     def add_items(self):
-        data = json.load(self.all_cfg)
         cfg = json.load(self.cfg)
-
-        try:
-            fps = data['fps']
-            fps.remove(cfg['fps'])
-            self.fps.addItem(cfg['fps'])
-            self.fps.addItems(fps)
-            
-        except ValueError:
-            self.fps.addItems(data['fps'])
 
         self.lineEdit.setText(cfg["name"])
 
